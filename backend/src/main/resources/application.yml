@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${TOMODACHI_DATABASE_URL:jdbc:h2:mem:tomodachi;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}
+    username: ${TOMODACHI_DATABASE_USER:sa}
+    password: ${TOMODACHI_DATABASE_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  flyway:
+    enabled: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+springdoc:
+  api-docs:
+    path: /v3/api-docs
