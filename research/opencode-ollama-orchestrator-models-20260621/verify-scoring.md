@@ -5,14 +5,14 @@ rubric column을 합산하고 candidate model을 정렬하기 위해 로컬 Node
 점수 기준:
 - Agentic coding 및 orchestration 근거: 25
 - OpenCode/Ollama 기준 context 운용 가능성: 20
-- Tool/function/structured-output 적합도: 15
+- 도구/함수/구조화 출력 적합도: 15
 - 18GB 미만 VRAM headroom: 15
-- Instruction following 및 planning 안정성: 15
+- 지시 이행 및 계획 안정성: 15
 - License/ecosystem 성숙도: 10
 
 출력:
 
-| 모델 | Agentic | Context | Tool | VRAM | Planning | License | Total |
+| 모델 | Agentic | Context | Tool | VRAM | Planning | License | 합계 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | devstral:24b | 25 | 18 | 13 | 10 | 13 | 10 | 89 |
 | mistral-small3.1/3.2:24b | 20 | 18 | 15 | 9 | 14 | 10 | 86 |

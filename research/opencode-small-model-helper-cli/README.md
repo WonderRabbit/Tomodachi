@@ -222,13 +222,13 @@ Tinker.Gen은 Tiny-Chu 내부 module로 import하지 말고 CLI/bridge boundary�
 
 ## 주요 출처
 
-- OpenCode tools: https://opencode.ai/docs/tools/
-- OpenCode custom tools: https://opencode.ai/docs/custom-tools/
-- OpenCode MCP servers: https://opencode.ai/docs/mcp-servers/
-- OpenCode permissions: https://opencode.ai/docs/permissions/
+- OpenCode 도구: https://opencode.ai/docs/tools/
+- OpenCode custom tool: https://opencode.ai/docs/custom-tools/
+- OpenCode MCP server: https://opencode.ai/docs/mcp-servers/
+- OpenCode permission: https://opencode.ai/docs/permissions/
 - Qwen3.6-35B-A3B model card: https://huggingface.co/Qwen/Qwen3.6-35B-A3B
-- Qwen3-Coder-Next technical report: https://arxiv.org/abs/2603.00729
-- ast-grep docs: https://ast-grep.github.io/
+- Qwen3-Coder-Next 기술 보고서: https://arxiv.org/abs/2603.00729
+- ast-grep 문서: https://ast-grep.github.io/
 - ast-grep MCP: https://github.com/ast-grep/ast-grep-mcp
 - ripgrep: https://github.com/BurntSushi/ripgrep
 - fd: https://github.com/sharkdp/fd

@@ -4,34 +4,34 @@ Access date: 2026-06-21
 
 ## OpenCode
 
-- OpenCode tools: https://opencode.ai/docs/tools/
-  - built-in tools, custom tools, MCP extension, permission link.
-- OpenCode custom tools: https://opencode.ai/docs/custom-tools/
+- OpenCode 도구: https://opencode.ai/docs/tools/
+  - built-in tool, custom tool, MCP extension, permission link.
+- OpenCode custom tool: https://opencode.ai/docs/custom-tools/
   - `.opencode/tools/`, global tools, `tool()` helper, schema arguments, context.
-- OpenCode permissions: https://opencode.ai/docs/permissions/
+- OpenCode permission: https://opencode.ai/docs/permissions/
   - `allow`, `ask`, `deny`, wildcard and granular object rules.
-- OpenCode MCP servers: https://opencode.ai/docs/mcp-servers/
-  - local/remote MCP, context caveat, per-agent/global enablement.
-- OpenCode agents: https://opencode.ai/docs/agents/
-  - primary agents, subagents, agent configuration.
-- OpenCode models: https://opencode.ai/docs/models/
+- OpenCode MCP server: https://opencode.ai/docs/mcp-servers/
+  - local/remote MCP, context caveat, agent별/global enablement.
+- OpenCode agent: https://opencode.ai/docs/agents/
+  - primary agent, subagent, agent configuration.
+- OpenCode model: https://opencode.ai/docs/models/
   - `provider_id/model_id`, custom model routing.
-- OpenCode providers: https://opencode.ai/docs/providers/
-  - AI SDK/Models.dev provider routing and local/provider options.
-- OpenCode commands: https://opencode.ai/docs/commands/
+- OpenCode provider: https://opencode.ai/docs/providers/
+  - AI SDK/Models.dev provider routing 및 local/provider option.
+- OpenCode command: https://opencode.ai/docs/commands/
   - `.opencode/commands/`, markdown commands, frontmatter.
 - OpenCode repository: https://github.com/anomalyco/opencode
 
 ## Qwen
 
 - Qwen3.6-35B-A3B model card: https://huggingface.co/Qwen/Qwen3.6-35B-A3B
-  - 35B total, 3B activated, context length, agentic coding claims.
+  - 35B total, 3B activated, context length, agentic coding 주장.
 - Qwen3-Coder-30B-A3B-Instruct model card: https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct
-  - smaller coding-agent candidate.
+  - 더 작은 coding-agent 후보.
 - Qwen3-Coder-Next model card: https://huggingface.co/Qwen/Qwen3-Coder-Next
-  - 80B total, 3B active, coding-agent direction.
+  - 80B total, 3B active, coding-agent 방향.
 - Qwen3-Coder blog: https://qwenlm.github.io/blog/qwen3-coder/
-- Qwen official repo: https://github.com/QwenLM/Qwen
+- Qwen 공식 repo: https://github.com/QwenLM/Qwen
 
 ## CLI tools
 
@@ -47,7 +47,7 @@ Access date: 2026-06-21
   - ignore-aware recursive search, type filters, PCRE2, performance notes.
 - fd repo: https://github.com/sharkdp/fd
   - simple file discovery, ignore defaults, type filters, command execution templates.
-- ast-grep docs: https://ast-grep.github.io/
+- ast-grep 문서: https://ast-grep.github.io/
 - ast-grep JSON mode: https://ast-grep.github.io/guide/tools/json.html
   - `--json=pretty`, `--json=stream`, `--json=compact`.
 - ast-grep pattern syntax: https://ast-grep.github.io/guide/pattern-syntax.html
@@ -83,7 +83,7 @@ Access date: 2026-06-21
   - structured templates for function calling.
 - ToolRegistry: https://arxiv.org/abs/2507.10593
   - unified tool registry and progressive disclosure.
-- Qwen3-Coder-Next technical report: https://arxiv.org/abs/2603.00729
+- Qwen3-Coder-Next 기술 보고서: https://arxiv.org/abs/2603.00729
 
 ## Local prior docs
 

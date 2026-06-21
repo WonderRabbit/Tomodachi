@@ -1,4 +1,4 @@
-# Wave 1 Digest: VRAM 및 Context 현실
+# 1차 조사 요약: VRAM 및 Context 현실
 
 핵심 findings:
 - Ollama의 listed model size는 전체 VRAM 요구량이 아니다. context/KV cache와 runtime overhead가 추가 memory를 사용한다.

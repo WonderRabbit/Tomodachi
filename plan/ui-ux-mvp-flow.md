@@ -1,8 +1,8 @@
-# Tomodachi MVP UI/UX Flow Plan
+# Tomodachi MVP UI/UX 흐름 계획
 
 ## 목적
 
-이 문서는 Tomodachi MVP에서 사용자가 처음 보게 되는 main UI, 화면별 노출 데이터, 이동 흐름, 상태 처리, 연결 페이지를 정의한다. 구현자는 이 문서를 기준으로 `React + Vite + TypeScript + shadcn/ui + Zustand + TanStack Query + TanStack Router` 프론트엔드를 설계하고, Tomodachi backend API를 canonical data source로 사용한다.
+이 문서는 Tomodachi MVP에서 사용자가 처음 보게 되는 main UI, 화면별 노출 데이터, 이동 흐름, 상태 처리, 연결 페이지를 정의한다. 구현자는 이 문서를 기준으로 `React + Vite + TypeScript + shadcn/ui + Zustand + TanStack Query + TanStack Router` 프론트엔드를 설계하고, Tomodachi backend API를 기준 데이터 소스로 사용한다.
 
 ## 근거
 
@@ -12,16 +12,16 @@
 
 ## UI 방향
 
-Tomodachi는 마케팅 페이지가 아니라 내부 제품 운영 도구다. 첫 화면은 설명형 landing page가 아니라 실제 업무 상태를 바로 보여주는 authenticated dashboard여야 한다.
+Tomodachi는 마케팅 페이지가 아니라 내부 제품 운영 도구다. 첫 화면은 설명형 landing page가 아니라 실제 업무 상태를 바로 보여주는 인증된 dashboard여야 한다.
 
-시각 방향은 Linear 계열의 정밀한 운영형 대시보드를 기준으로 잡는다. 짙은 panel 기반 UI, 얇은 border, 낮은 채도, 정보 밀도 높은 table/list/board, restrained accent color를 사용한다. 단, MVP에서는 dark-only 고정이 아니라 shadcn token 기반 light/dark 대응을 열어 둔다.
+시각 방향은 Linear 계열의 정밀한 운영형 대시보드를 기준으로 잡는다. 짙은 panel 기반 UI, 얇은 border, 낮은 채도, 정보 밀도 높은 table/list/board, 절제된 강조색을 사용한다. 단, MVP에서는 dark-only 고정이 아니라 shadcn token 기반 light/dark 대응을 열어 둔다.
 
 디자인 원칙:
 
 - 좌측 sidebar + 중앙 작업 영역 + 우측 detail panel을 기본 구조로 둔다.
-- dashboard card는 장식이 아니라 drill-down 가능한 상태 요약이어야 한다.
+- dashboard card는 장식이 아니라 상세 이동이 가능한 상태 요약이어야 한다.
 - task, architecture artifact, agent run은 같은 탐색 모델 안에서 연결되어야 한다.
-- OpenCode 관련 raw data는 직접 노출하지 않고 backend가 정리한 summary/evidence/unresolved item만 보여준다.
+- OpenCode 관련 raw data는 직접 노출하지 않고 backend가 정리한 요약, 근거, 미해결 항목만 보여준다.
 - 빈 상태, 권한 제한, 로딩, 오류, 충돌 상태를 화면별로 명시한다.
 - route/search state만으로 같은 문맥을 복원할 수 있어야 한다.
 
@@ -65,16 +65,16 @@ flowchart TD
   Dashboard --> Settings
 ```
 
-## App Shell
+## 앱 Shell
 
-### Layout
+### 레이아웃
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ Top bar: product switcher | global search | command | sync health | user   │
+│ 상단 바: 제품 전환 | 전역 검색 | 명령 | 동기화 상태 | 사용자        │
 ├───────────────┬──────────────────────────────────────────────┬─────────────┤
-│ Sidebar       │ Main content                                 │ Detail      │
-│               │ route-owned dashboard/list/board/table       │ optional    │
+│ 사이드바      │ 주요 content                                  │ 상세        │
+│               │ route 소유 dashboard/list/board/table        │ 선택        │
 │ Lifecycle     │                                              │ panel       │
 │ Architecture  │                                              │             │
 │ Agent Runs    │                                              │             │
@@ -82,45 +82,45 @@ flowchart TD
 └───────────────┴──────────────────────────────────────────────┴─────────────┘
 ```
 
-### Sidebar groups
+### 사이드바 그룹
 
-| Group | Item | Route | 노출 조건 |
+| 그룹 | 항목 | Route | 노출 조건 |
 |---|---|---|---|
-| Overview | Dashboard | `/` | authenticated |
-| Lifecycle | Products | `/products` | `product:read` |
-| Lifecycle | Projects | `/projects` | `project:read` |
-| Lifecycle | Tasks | `/tasks` | `task:read` |
-| Knowledge | Architecture | `/architecture` | `artifact:read` |
+| 개요 | Dashboard | `/` | 인증됨 |
+| 제품 생명주기 | Products | `/products` | `product:read` |
+| 제품 생명주기 | Projects | `/projects` | `project:read` |
+| 제품 생명주기 | Tasks | `/tasks` | `task:read` |
+| 지식 | Architecture | `/architecture` | `artifact:read` |
 | Agent | Agent Runs | `/agent-runs` | `task:read` 또는 `agent-run:read` |
-| Operations | Settings | `/settings` | role별 부분 노출 |
+| 운영 | Settings | `/settings` | role별 부분 노출 |
 
-### Top bar data
+### 상단 바 데이터
 
-| 영역 | 데이터 | Source |
+| 영역 | 데이터 | 출처 |
 |---|---|---|
-| Product switcher | product name, status, active project count | `GET /api/products` |
-| Global search | task, project, artifact, agent run result | `GET /api/search` |
-| Command palette | route shortcuts, create task, transition task | route config + permission map |
-| Sync health | last OpenCode sync, failed webhook count | backend summary endpoint |
-| User menu | name, role, scopes | `GET /api/auth/me` |
+| 제품 전환 | 제품명, 상태, 활성 project 수 | `GET /api/products` |
+| 전역 검색 | task, project, artifact, agent run 결과 | `GET /api/search` |
+| 명령 palette | route shortcut, task 생성, task 상태 전환 | route config + permission map |
+| 동기화 상태 | 마지막 OpenCode sync, 실패한 webhook 수 | backend summary endpoint |
+| 사용자 메뉴 | 이름, role, scope | `GET /api/auth/me` |
 
-## Main Dashboard
+## 메인 Dashboard
 
 Route: `/`
 
 Dashboard는 첫 화면이다. 사용자는 로그인 후 바로 제품 상태, 막힌 작업, agent review queue를 확인해야 한다.
 
-### First viewport
+### 첫 viewport
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────┐
 │ Product: Tomodachi                   Range: 7d | 30d | All                │
 ├─────────────────┬─────────────────┬─────────────────┬────────────────────┤
-│ Active Projects │ Tasks In Flight │ Blocked Tasks   │ Agent Review Queue │
-│ count + delta   │ count + trend   │ count + top 3   │ count + latest run │
+│ 활성 Projects │ 진행 중 Tasks │ Blocked Tasks   │ Agent Review Queue │
+│ 수 + 변화량    │ 수 + 추세     │ 수 + 상위 3개   │ 수 + 최신 run       │
 ├──────────────────────────────────────────────┬─────────────────────────────┤
-│ Workstream overview                          │ Review required             │
-│ project rows with progress/status            │ agent runs + unresolved      │
+│ 작업 흐름 개요                              │ Review 필요                 │
+│ progress/status가 있는 project row          │ agent run + 미해결 항목      │
 ├──────────────────────────────────────────────┴─────────────────────────────┤
 │ Architecture coverage: linked tasks, accepted ADR, stale artifact warnings │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -128,21 +128,21 @@ Dashboard는 첫 화면이다. 사용자는 로그인 후 바로 제품 상태, 
 
 ### 표시 데이터
 
-| Block | 표시 데이터 | Click target |
+| 블록 | 표시 데이터 | 클릭 대상 |
 |---|---|---|
-| Active Projects | active project count, status breakdown, updated time | `/projects?status=active` |
-| Tasks In Flight | Ready, In Progress, Review, QA counts | `/tasks?status=InProgress,Review,QA` |
-| Blocked Tasks | blocked count, top blocked task title/age/owner | `/tasks?status=Blocked` |
-| Agent Review Queue | review-required run count, latest failed/completed runs | `/agent-runs?requiresReview=true` |
-| Workstream overview | project key, name, owner, due, progress, blocker count | `/projects/$projectId` |
-| Architecture coverage | linked artifact ratio, stale artifact count, accepted ADR count | `/architecture` |
+| Active Projects | 활성 project 수, 상태 breakdown, updated time | `/projects?status=active` |
+| Tasks In Flight | Ready, In Progress, Review, QA 수 | `/tasks?status=InProgress,Review,QA` |
+| Blocked Tasks | blocked 수, 주요 blocked task 제목/경과/owner | `/tasks?status=Blocked` |
+| Agent Review Queue | review-required run 수, 최신 failed/completed run | `/agent-runs?requiresReview=true` |
+| Workstream overview | project key, name, owner, due, progress, blocker 수 | `/projects/$projectId` |
+| Architecture coverage | linked artifact 비율, stale artifact 수, accepted ADR 수 | `/architecture` |
 
-### Empty/Error states
+### Empty/Error 상태
 
 | 상태 | UI 처리 |
 |---|---|
 | Product 없음 | "Create first product" action은 Admin/Product Manager에게만 노출 |
-| Project 없음 | empty dashboard with product summary and create project action |
+| Project 없음 | product summary와 create project action을 가진 empty dashboard |
 | Agent run 없음 | "No agent runs imported yet"와 task context setup link |
 | Search/API 실패 | 해당 panel 단위 error, 전체 dashboard blank 처리 금지 |
 | 권한 부족 | card는 hidden보다 disabled summary를 우선, sensitive action만 숨김 |
@@ -155,10 +155,10 @@ Dashboard는 첫 화면이다. 사용자는 로그인 후 바로 제품 상태, 
 
 | UI 영역 | 표시 데이터 |
 |---|---|
-| Header | total products, active products, archived products |
+| Header | 전체 product 수, active product 수, archived product 수 |
 | Filter bar | status, owner, updated range |
-| Table | code, name, status, workspace count, active project count, open task count, last activity |
-| Row action | open product, copy product code, archive if permitted |
+| Table | code, name, status, workspace 수, active project 수, open task 수, last activity |
+| Row action | product 열기, product code 복사, 허용 시 archive |
 
 ### `/products/$productId`
 
@@ -166,11 +166,11 @@ Dashboard는 첫 화면이다. 사용자는 로그인 후 바로 제품 상태, 
 
 | Tab | 표시 데이터 | 연결 |
 |---|---|---|
-| Overview | product health, active projects, blockers, recent activity | project/task/detail |
-| Workspaces | workspace list, project count, owner | `/workspaces/$workspaceId` |
+| Overview | product health, active project, blocker, recent activity | project/task/detail |
+| Workspaces | workspace list, project 수, owner | `/workspaces/$workspaceId` |
 | Projects | active/completed project table | `/projects/$projectId` |
-| Architecture | artifact coverage and stale references | `/architecture?productId=$productId` |
-| Agent Runs | product-scoped run history | `/agent-runs?productId=$productId` |
+| Architecture | artifact coverage와 stale reference | `/architecture?productId=$productId` |
+| Agent Runs | product 기준 run history | `/agent-runs?productId=$productId` |
 
 ## Projects
 
@@ -180,10 +180,10 @@ Dashboard는 첫 화면이다. 사용자는 로그인 후 바로 제품 상태, 
 
 | UI 영역 | 표시 데이터 |
 |---|---|
-| Metric strip | active, blocked, review, done this week |
+| Metric strip | active, blocked, review, 이번 주 done |
 | Filter bar | product, workspace, status, owner, due range |
-| Table/List | key, name, status, owner, task counts, linked artifact count, latest agent run |
-| Saved views | My active, Blocked, Review needed, No architecture link |
+| Table/List | key, name, status, owner, task 수, linked artifact 수, latest agent run |
+| Saved view | My active, Blocked, Review needed, No architecture link |
 
 ### `/projects/$projectId`
 
@@ -191,8 +191,8 @@ Dashboard는 첫 화면이다. 사용자는 로그인 후 바로 제품 상태, 
 
 | View | 목적 | Main content | Right detail |
 |---|---|---|---|
-| Overview | project context | summary, progress, linked artifacts, recent activity | selected task/run |
-| Board | execution | task columns by status | task detail panel |
+| Overview | project context | summary, progress, linked artifact, recent activity | selected task/run |
+| Board | execution | status별 task column | task detail panel |
 | Artifacts | architecture link | linked ADR/RFC/API/diagram table | artifact preview |
 
 ### `/projects/$projectId/tasks/board`
@@ -202,15 +202,15 @@ Board는 drag-and-drop 없이도 빠른 상태 전이를 지원한다.
 | Column | 포함 상태 | Card data |
 |---|---|---|
 | Ready | `Ready` | number, title, priority, assignee, artifact count |
-| In Progress | `InProgress` | same + active agent run badge |
-| Blocked | `Blocked` | same + blocked age/reason |
-| Review | `Review` | same + reviewer/review-required |
-| QA | `QA` | same + evidence count |
-| Done | `Done` | collapsed by default in MVP |
+| In Progress | `InProgress` | Ready와 동일 + active agent run badge |
+| Blocked | `Blocked` | Ready와 동일 + blocked age/reason |
+| Review | `Review` | Ready와 동일 + reviewer/review-required |
+| QA | `QA` | Ready와 동일 + evidence count |
+| Done | `Done` | MVP 기본값은 접힘 |
 
 Interaction:
 
-1. Card click opens right-side `TaskDetailPanel`.
+1. Card click은 우측 `TaskDetailPanel`을 연다.
 2. Status button opens transition dialog.
 3. Valid transition optimistic-patches card and detail.
 4. Backend error rolls back and shows inline error + toast.
@@ -224,13 +224,13 @@ Interaction:
 
 | Column | Data | Interaction |
 |---|---|---|
-| Number | task number | click opens detail |
+| Number | task number | click으로 detail 열기 |
 | Title | title, project key | search/filter |
 | Status | enum label + color token | faceted filter |
 | Priority | priority badge | sort/filter |
 | Assignee | user display name | filter |
-| Linked Artifacts | count + first artifact type | opens filtered Architecture |
-| Agent Runs | latest run status, review flag | opens Agent Run |
+| Linked Artifacts | count + first artifact type | filtering된 Architecture 열기 |
+| Agent Runs | latest run status, review flag | Agent Run 열기 |
 | Updated | relative time | sort |
 
 ### `/tasks/$taskId`
@@ -240,12 +240,12 @@ Task detail은 full page와 side panel 두 형태를 공유한다.
 | Section | 표시 데이터 |
 |---|---|
 | Header | number, title, status, priority, assignee, project |
-| Description | markdown/plain text, acceptance notes |
-| Status transition | allowed next states, reason input, permission guard |
-| Activity | transition, comment, artifact link, agent run events |
+| Description | markdown/plain text, acceptance note |
+| Status transition | allowed next state, reason input, permission guard |
+| Activity | transition, comment, artifact link, agent run event |
 | Architecture links | linked ADR/RFC/diagram/API contract/domain model |
-| Agent runs | run summary, changed files count, evidence, unresolved items |
-| Context bundle | compact task context preview for agent |
+| Agent runs | run summary, changed file count, evidence, unresolved item |
+| Context bundle | agent용 compact task context preview |
 
 Primary actions:
 
@@ -264,10 +264,10 @@ Architecture registry는 문서 저장소가 아니라 "task와 연결된 archit
 
 | UI 영역 | 표시 데이터 |
 |---|---|
-| Summary cards | accepted ADR, proposed RFC, stale links, unlinked tasks |
+| Summary cards | accepted ADR, proposed RFC, stale link, unlinked task |
 | Filters | type, status, product, linkedTaskId, sourceKind |
 | Table/card list | type, title, status, source path, linked task count, updated |
-| Warnings | stale git ref, no linked task, generated-only artifact |
+| Warnings | stale git ref, linked task 없음, generated-only artifact |
 
 ### `/architecture/adr/$artifactId`
 
@@ -277,7 +277,7 @@ Architecture registry는 문서 저장소가 아니라 "task와 연결된 archit
 | Summary | rationale summary, decision date, owner |
 | Linked tasks | task number/title/status/agent run evidence |
 | Source preview | Git path/ref metadata; MVP에서는 full editor 없음 |
-| Activity | artifact status change, link/unlink events |
+| Activity | artifact status change, link/unlink event |
 
 Navigation rule:
 
@@ -295,7 +295,7 @@ Agent Runs는 OpenCode 실행 이력을 사람이 검토 가능한 단위로 보
 | Run | run id, status |
 | Agent | provider, model, agent name |
 | Linked context | product, project, task |
-| Changed files | count and top file path |
+| Changed files | count와 대표 file path |
 | Evidence | evidence count, missing evidence warning |
 | Unresolved | unresolved item count |
 | Review | requiresReview flag, reviewer |
@@ -329,7 +329,7 @@ MVP Settings는 전체 설정 화면이 아니라 운영에 필요한 최소 읽
 | Profile | current user, role, scopes |
 | Roles | role/scopes read-only matrix |
 | Integrations | OpenCode sync status, MCP tool list |
-| Webhooks | delivery status, failed retry for admin |
+| Webhooks | delivery status, admin용 failed retry |
 | Appearance | theme token preview only; full customizer는 후순위 |
 
 ## 상태 처리
@@ -358,9 +358,9 @@ MVP Settings는 전체 설정 화면이 아니라 운영에 필요한 최소 읽
 
 Zustand는 sidebar collapse, command palette open, right panel state 같은 UI-local state만 담당한다. Server state는 TanStack Query가 담당하고, 화면 문맥은 TanStack Router search params가 담당한다.
 
-## Responsive Behavior
+## 반응형 동작
 
-| Width | Behavior |
+| 폭 | 동작 |
 |---|---|
 | 1280px 이상 | sidebar + main + right detail panel 3-column |
 | 768px-1279px | sidebar + main, detail은 sheet/drawer |
@@ -391,14 +391,14 @@ Mobile에서도 기능을 숨기지 않는다. 다만 board는 columns를 horizo
 
 ### 후순위
 
-- Release timeline
-- Advanced graph visualization
-- Full document editor
-- Advanced keyboard shortcuts
-- Full theme customizer
-- External customer portal
+- release timeline
+- 고급 graph visualization
+- 전체 document editor
+- 고급 keyboard shortcut
+- 전체 theme customizer
+- 외부 customer portal
 
-## Acceptance Checklist
+## 인수 기준 checklist
 
 - Main dashboard가 product/project/task/agent/architecture 상태를 첫 화면에서 보여준다.
 - 모든 주요 dashboard card는 연결 route를 가진다.

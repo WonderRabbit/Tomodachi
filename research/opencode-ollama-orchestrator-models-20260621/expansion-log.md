@@ -5,29 +5,29 @@
 핵심 질문: VRAM 18GB 미만에서 실행 가능한 Ollama 모델 중 OpenCode task-management 및 orchestration agent에 가장 잘 맞는 모델은 무엇인가?
 
 조사 축:
-- OpenCode agent requirements: agent/subagent config, permissions, model routing, context 요구사항.
-- Ollama model catalog: current tags, listed model sizes, context windows, OpenCode launch integration.
-- Agent/coding benchmark signal: SWE-bench, coding-agent claims, tool/function-calling 근거.
-- VRAM and context reality: listed model size가 안전한 64K+ VRAM 운용과 같지 않은 이유.
+- OpenCode agent 요구사항: agent/subagent config, permissions, model routing, context 요구사항.
+- Ollama 모델 카탈로그: 현재 tag, 표시된 model size, context window, OpenCode 실행 통합.
+- Agent/coding 벤치마크 신호: SWE-bench, coding-agent claims, tool/function-calling 근거.
+- VRAM과 context 현실: listed model size가 안전한 64K+ VRAM 운용과 같지 않은 이유.
 
 점수 기준:
 - Agentic coding 및 orchestration 근거: 25
 - OpenCode/Ollama 기준 context 운용 가능성: 20
-- Tool/function/structured-output 적합도: 15
+- 도구/함수/구조화 출력 적합도: 15
 - 18GB 미만 VRAM headroom: 15
-- Instruction following 및 planning 안정성: 15
+- 지시 이행 및 계획 안정성: 15
 - License/ecosystem 성숙도: 10
 
 ## Wave 1
 
 실행한 조사 lane:
-- OpenCode orchestrator requirements librarian.
-- Ollama model catalog librarian.
-- Coding-agent benchmark librarian.
+- OpenCode orchestrator 요구사항 조사.
+- Ollama 모델 카탈로그 조사.
+- Coding-agent 벤치마크 조사.
 - VRAM/context librarian.
 
 반환된 결과:
-- Ollama model catalog librarian.
+- Ollama 모델 카탈로그 조사.
 
 확보한 marker:
 - LEAD: DeepSeek-Coder-V2-Lite Ollama availability -- WHY: 사용자가 DeepSeek coder-lite 계열을 기대할 수 있지만 Ollama에서는 `deepseek-coder`와 `deepseek-v2`만 확인됨 -- ANGLE: Ollama/library 및 model card 검색.
@@ -37,10 +37,10 @@
 ## Wave 2
 
 조사한 항목:
-- DeepSeek-Coder-V2-Lite Ollama availability.
-- Qwen3-Coder-Next Ollama availability.
-- OpenCode Ollama provider 및 model/tool-calling docs.
-- Ollama context-length 및 OpenAI compatibility docs.
+- DeepSeek-Coder-V2-Lite Ollama 제공 여부.
+- Qwen3-Coder-Next Ollama 제공 여부.
+- OpenCode Ollama provider 및 model/tool-calling 문서.
+- Ollama context-length 및 OpenAI 호환성 문서.
 
 종료한 항목:
 - DeepSeek-Coder-V2-Lite first-party Ollama library candidate: direct search pass에서 별도 current Ollama library page를 찾지 못했다. visible Ollama catalog에 머문다면 `deepseek-v2:16b` 또는 `deepseek-coder:6.7b`를 사용한다.

@@ -5,7 +5,7 @@
 ### `jq`
 
 추천도: P0  
-역할: JSON projection, filtering, count, stable compact output  
+역할: JSON projection, filtering, count, 안정적인 compact output
 로컬 상태: 설치됨, `jq-1.7.1`
 
 추천 이유:
@@ -47,7 +47,7 @@ wrapper 이름:
 ### `ripgrep` / `rg`
 
 추천도: P0  
-역할: ignore-aware text evidence search  
+역할: ignore 규칙을 반영한 text evidence search
 로컬 상태: 설치됨, `ripgrep 14.1.1`
 
 추천 이유:

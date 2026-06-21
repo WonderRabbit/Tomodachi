@@ -12,7 +12,7 @@
 - OpenCode tool/subagent 오케스트레이션 적합도
 - Ollama 기준 context 운용 가능성
 - 18GB 미만 VRAM headroom
-- instruction following 및 planning 안정성
+- 지시 이행 및 planning 안정성
 - license 및 ecosystem 성숙도
 
 ## 먼저 읽을 문서

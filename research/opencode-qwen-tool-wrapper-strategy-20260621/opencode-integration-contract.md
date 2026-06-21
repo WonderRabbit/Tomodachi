@@ -1,4 +1,4 @@
-# OpenCode Integration Contract
+# OpenCode 통합 계약
 
 ## 목적
 
@@ -225,19 +225,19 @@ export default tool({
 
 ```md
 ---
-description: Scan project wrapper/tool surface with bounded helper tools
+description: 제한된 helper tool로 project wrapper/tool surface를 스캔한다
 agent: plan
 ---
 
-Use helper_find_files to find OpenCode, tool, MCP, and helper files.
-Use helper_search_text only for targeted evidence.
-Use helper_json_query/helper_yaml_query for config files.
+OpenCode, tool, MCP, helper file은 helper_find_files로 찾는다.
+targeted evidence에만 helper_search_text를 사용한다.
+config file에는 helper_json_query/helper_yaml_query를 사용한다.
 Return:
 - relevant files
 - detected wrappers
 - missing doctor checks
 - uncertainty
-Do not use raw bash unless a helper is missing.
+helper가 없을 때만 raw bash를 사용한다.
 ```
 
 ### `.opencode/commands/verify-wrapper-fixtures.md`

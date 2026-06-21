@@ -1,4 +1,4 @@
-# Wave 1 Digest: Coding-Agent Benchmark 근거
+# 1차 조사 요약: Coding-Agent 벤치마크 근거
 
 핵심 findings:
 - SWE-bench는 repository-level repair와 multi-file issue resolution에 가장 가까운 benchmark다.

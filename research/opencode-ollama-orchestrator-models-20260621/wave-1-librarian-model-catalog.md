@@ -1,4 +1,4 @@
-# Wave 1 Digest: Ollama Model Catalog
+# 1차 조사 요약: Ollama 모델 카탈로그
 
 핵심 findings:
 - 강한 18GB 미만 후보로 `devstral:24b`, `mistral-small3.1:24b` / `mistral-small3.2:24b`, `codestral:22b`, `qwen3:14b`, `gemma3:27b`, `deepseek-v2:16b`, `phi4:14b`, `starcoder2:15b`, `llama3.1:8b`가 확인되었다.

@@ -1,11 +1,11 @@
-# Verification Log
+# 검증 로그
 
 작성일: 2026-06-21  
 환경: `/Users/oneyoon/Workspace/Personal`, macOS/Homebrew PATH 기준
 
-## Local CLI availability
+## 로컬 CLI 사용 가능 여부
 
-| Tool | 상태 | Version / path |
+| Tool | 상태 | version / path |
 | --- | --- | --- |
 | `jq` | 설치됨 | `/opt/homebrew/bin/jq`, `jq-1.7.1` |
 | `yq` | 설치됨 | `/opt/homebrew/bin/yq`, Mike Farah `v4.47.2` |

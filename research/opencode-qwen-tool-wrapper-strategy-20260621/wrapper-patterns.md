@@ -1,4 +1,4 @@
-# Wrapper Pattern Catalog
+# Wrapper 패턴 카탈로그
 
 목표: Qwen 계열 모델이 raw shell과 CLI syntax를 직접 조합하지 않게 만들고, 반복되는 패턴을 OpenCode custom tool, MCP tool, custom command, `just` recipe, shell script로 승격한다.
 
@@ -16,7 +16,7 @@
    - search/rewrite preview는 `allow` 또는 `ask`.
    - 실제 patch/apply는 OpenCode `apply_patch` 또는 별도 승인.
 
-## Pattern 1: JSON projection wrapper
+## 패턴 1: JSON projection wrapper
 
 문제:
 
@@ -63,7 +63,7 @@ jq -c -S '{scripts:(.scripts // {}), deps:(.dependencies // {} | keys), devDeps:
 - compact output과 key sort를 wrapper가 보장.
 - missing key 처리를 wrapper가 보장.
 
-## Pattern 2: YAML/OpenCode config query wrapper
+## 패턴 2: YAML/OpenCode config query wrapper
 
 문제:
 
@@ -104,7 +104,7 @@ yq -o=json '.permission' opencode.jsonc | jq -c -S .
 - Python `yq`와 혼동하지 않게 doctor에서 `yq --version`을 확인한다.
 - in-place edit인 `yq -i`는 helper default에서 제외한다.
 
-## Pattern 3: `rg --json` evidence wrapper
+## 패턴 3: `rg --json` evidence wrapper
 
 문제:
 
@@ -154,7 +154,7 @@ rg --json --glob '*.ts' 'function' src
 - file path, line number, snippet만 남김.
 - hidden/binary/ignore 기본 정책을 wrapper가 고정.
 
-## Pattern 4: `fd` file candidate wrapper
+## 패턴 4: `fd` file candidate wrapper
 
 문제:
 
@@ -195,7 +195,7 @@ fd opencode . -e md -e ts -e json --type file
 - `fd -x`와 `fd -X`는 강력하지만 side effect가 생길 수 있다.
 - OpenCode 기본 helper에서는 discovery까지만 허용하고, follow-up command는 `helper_run_recipe` 또는 별도 approval로 둔다.
 
-## Pattern 5: `ast-grep` structural search wrapper
+## 패턴 5: `ast-grep` structural search wrapper
 
 문제:
 
@@ -322,12 +322,12 @@ OpenCode command:
 
 ```md
 ---
-description: Run wrapper verification
+description: wrapper 검증 실행
 agent: build
 ---
 
-Run `helper_run_recipe({ "recipe": "verify-wrapper" })`.
-Summarize only failing checks and exact command evidence.
+`helper_run_recipe({ "recipe": "verify-wrapper" })`를 실행한다.
+실패한 check와 정확한 command evidence만 요약한다.
 ```
 
 모델 부담 감소:
