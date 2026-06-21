@@ -1,0 +1,43 @@
+import type { Project } from "../types";
+
+export const projects: Project[] = [
+  {
+    id: "project_alpha",
+    key: "TMD-A1",
+    productId: "product_tomodachi",
+    name: "Lifecycle dashboard alpha",
+    owner: "Product Ops",
+    status: "Watch",
+    progress: 68,
+    due: "2026-07-05",
+    blockers: 2,
+    linkedArtifacts: 4,
+    latestAgentRunId: "run_review_01",
+  },
+  {
+    id: "project_agent",
+    key: "TMD-B2",
+    productId: "product_tomodachi",
+    name: "OpenCode evidence bridge",
+    owner: "Agent Platform",
+    status: "Blocked",
+    progress: 41,
+    due: "2026-07-12",
+    blockers: 3,
+    linkedArtifacts: 3,
+    latestAgentRunId: "run_failed_02",
+  },
+  {
+    id: "project_registry",
+    key: "TMD-C3",
+    productId: "product_tomodachi",
+    name: "Architecture registry beta",
+    owner: "Architecture",
+    status: "Healthy",
+    progress: 82,
+    due: "2026-07-19",
+    blockers: 0,
+    linkedArtifacts: 6,
+    latestAgentRunId: "run_done_03",
+  },
+];
