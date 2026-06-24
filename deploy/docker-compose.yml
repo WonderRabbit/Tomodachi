@@ -1,0 +1,49 @@
+name: ${COMPOSE_PROJECT_NAME:-tomodachi}
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tomodachi}
+      POSTGRES_USER: ${POSTGRES_USER:-tomodachi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tomodachi_local_password}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - tomodachi-postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  backend:
+    build:
+      context: .
+      dockerfile: deploy/backend.Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: deploy
+      TOMODACHI_DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-tomodachi}
+      TOMODACHI_DATABASE_USER: ${POSTGRES_USER:-tomodachi}
+      TOMODACHI_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-tomodachi_local_password}
+    ports:
+      - "127.0.0.1:${TOMODACHI_BACKEND_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/frontend.Dockerfile
+    ports:
+      - "127.0.0.1:${TOMODACHI_FRONTEND_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  tomodachi-postgres-data:
