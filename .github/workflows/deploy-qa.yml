@@ -1,0 +1,84 @@
+name: Deploy QA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/deploy-qa.yml"
+      - ".dockerignore"
+      - "backend/**"
+      - "db/init.sql"
+      - "deploy/**"
+      - "front/**"
+      - "scripts/deploy.*"
+
+jobs:
+  linux-live-deploy:
+    name: Linux live Docker deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install zsh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh
+
+      - name: Verify Docker runner surface
+        run: |
+          docker info
+          docker compose version
+          zsh --version
+
+      - name: Start Tomodachi stack
+        run: ./scripts/deploy.sh up
+
+      - name: Verify backend health and seeded login
+        run: |
+          curl -fsS http://127.0.0.1:8080/actuator/health
+          curl -fsS -X POST http://127.0.0.1:8080/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"admin@tomodachi.local","password":"password"}' \
+            | grep -q 'accessToken'
+
+      - name: Verify database schema initialized
+        run: |
+          table_count="$(docker compose --env-file deploy/.env.example -f deploy/docker-compose.yml --project-directory . exec -T db psql -U tomodachi -d tomodachi -tAc "select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('users','product','workspace','project','tasks','architecture_artifact','task_artifact_link','agent_run','agent_run_changed_files','task_transition','audit_event','outbox_event');")"
+          test "$table_count" = "12"
+
+      - name: Capture stack status
+        if: always()
+        run: |
+          ./scripts/deploy.sh status || true
+          docker compose --env-file deploy/.env.example -f deploy/docker-compose.yml --project-directory . logs --tail=200 || true
+
+      - name: Clean up stack
+        if: always()
+        run: docker compose --env-file deploy/.env.example -f deploy/docker-compose.yml --project-directory . down -v
+
+  windows-powershell-wrapper:
+    name: Windows PowerShell 7.6 wrapper
+    runs-on: windows-2025
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Windows runner surface
+        run: |
+          $version = $PSVersionTable.PSVersion
+          $version
+          if ($version -lt [version]"7.6") {
+            throw "PowerShell 7.6 or newer is required; found $version"
+          }
+          docker --version
+          docker compose version
+
+      - name: Verify PowerShell wrapper syntax and config
+        run: |
+          pwsh -NoLogo -NoProfile -Command '$errors = $null; [System.Management.Automation.Language.Parser]::ParseFile("scripts/deploy.ps1", [ref]$null, [ref]$errors) > $null; if ($errors) { $errors | ForEach-Object { $_.Message }; exit 1 }'
+          pwsh -File .\scripts\deploy.ps1 help
+          pwsh -File .\scripts\deploy.ps1 config | Select-String -Pattern 'tomodachi'

@@ -221,6 +221,9 @@ pwsh -File .\scripts\deploy.ps1 config
 | Live Docker deploy | `./scripts/deploy.sh up` | 이 호스트에서는 미검증 | Docker Desktop bundle이 열리지 않고 Docker daemon socket이 없어 container start가 불가했다. Docker Desktop이 정상인 Windows/macOS에서 실행해야 한다. |
 | Windows PowerShell 7.6 wrapper | `pwsh -File .\scripts\deploy.ps1 doctor` | 이 호스트에서는 미검증 | macOS 작업 환경에 `pwsh`가 없어 Windows/PowerShell 실행은 문서와 source review 기준으로만 준비됨. |
 | Database init | PostgreSQL empty volume + `/docker-entrypoint-initdb.d/001-init.sql` | Compose config까지 검증 | 실제 `db/init.sql` 실행은 live Docker deploy 검증에 포함된다. |
+| Remote live QA | `.github/workflows/deploy-qa.yml` | GitHub Actions에서 검증 | `ubuntu-24.04`는 `./scripts/deploy.sh up`으로 PostgreSQL/backend/frontend와 schema count를 확인하고, `windows-2025`는 PowerShell 7.6 이상에서 `scripts/deploy.ps1` syntax/config를 확인한다. |
+
+로컬 Docker Desktop이 동작하지 않는 경우에도 `Deploy QA` workflow를 `workflow_dispatch`로 실행하면 원격 runner에서 live deploy 증거를 만들 수 있다.
 
 ## 11. 문제 해결
 
