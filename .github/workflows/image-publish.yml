@@ -1,0 +1,153 @@
+name: Publish Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Optional additional Docker tag to publish.
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: image-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  publish-backend:
+    name: Publish backend image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Resolve GHCR image owner
+        id: image-owner
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate manual image tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          MANUAL_IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+        run: |
+          case "$GITHUB_REF" in
+            refs/heads/main|refs/tags/v*) ;;
+            *)
+              echo "manual image_tag publishes are allowed only from refs/heads/main or refs/tags/v*; current ref is $GITHUB_REF" >&2
+              exit 1
+              ;;
+          esac
+
+          if [ -n "$MANUAL_IMAGE_TAG" ] && ! printf '%s' "$MANUAL_IMAGE_TAG" | grep -Eq '^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'; then
+            echo "invalid Docker tag: image_tag must match ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$" >&2
+            exit 1
+          fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Backend image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.image-owner.outputs.owner }}/tomodachi-backend
+          flavor: latest=false
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ github.event.inputs.image_tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.image_tag != '' }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/backend.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+  publish-frontend:
+    name: Publish frontend image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Resolve GHCR image owner
+        id: image-owner
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate manual image tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          MANUAL_IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+        run: |
+          case "$GITHUB_REF" in
+            refs/heads/main|refs/tags/v*) ;;
+            *)
+              echo "manual image_tag publishes are allowed only from refs/heads/main or refs/tags/v*; current ref is $GITHUB_REF" >&2
+              exit 1
+              ;;
+          esac
+
+          if [ -n "$MANUAL_IMAGE_TAG" ] && ! printf '%s' "$MANUAL_IMAGE_TAG" | grep -Eq '^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'; then
+            echo "invalid Docker tag: image_tag must match ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$" >&2
+            exit 1
+          fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Frontend image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.image-owner.outputs.owner }}/tomodachi-frontend
+          flavor: latest=false
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ github.event.inputs.image_tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.image_tag != '' }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/frontend.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend

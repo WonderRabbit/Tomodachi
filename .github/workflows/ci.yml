@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workflow-yaml:
+    name: Workflow YAML parse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse workflow YAML files
+        run: ruby -e 'require "yaml"; ARGV.each { |path| YAML.load_file(path); puts "parsed #{path}" }' .github/workflows/*.yml
+
+  backend-test:
+    name: Backend tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Run backend tests
+        working-directory: backend
+        run: ./gradlew --no-daemon test
+
+  frontend-build:
+    name: Frontend typecheck and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: front
+        run: npm ci
+
+      - name: Typecheck frontend
+        working-directory: front
+        run: npm run typecheck
+
+      - name: Build frontend
+        working-directory: front
+        run: npm run build
+
+  compose-config:
+    name: Compose config validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate dev template and reject prod template
+        run: |
+          sh deploy/validate-compose-env.sh --env-file deploy/env.dev.template
+          if sh deploy/validate-compose-env.sh --env-file deploy/env.prod.template; then
+            echo "prod template unexpectedly passed; it must keep required prod sentinels/placeholders" >&2
+            exit 1
+          fi
+          echo "prod template rejected as expected"
+
+      - name: Render local Compose config
+        run: docker compose --env-file deploy/.env.example -f deploy/docker-compose.yml --project-directory . config
+
+      - name: Render dev Compose config
+        run: docker compose --env-file deploy/env.dev.template -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml --project-directory . config
+
+      - name: Render prod Compose config with temporary env
+        run: |
+          tmp_prod_env=$(mktemp)
+          trap 'rm -f "$tmp_prod_env"' EXIT
+          sed \
+            -e 's/__REQUIRED_PROD_SECRET__/CIProdDummyPassword2026!/g' \
+            -e 's/tomodachi.example.com/ci-prod.tomodachi.internal/g' \
+            -e 's/ops@example.com/ops@tomodachi.internal/g' \
+            deploy/env.prod.template > "$tmp_prod_env"
+          sh deploy/validate-compose-env.sh --env-file "$tmp_prod_env"
+          docker compose --env-file "$tmp_prod_env" -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml --project-directory . config
+
+  image-build:
+    name: Build container images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/backend.Dockerfile
+          push: false
+          tags: tomodachi-backend:ci
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/frontend.Dockerfile
+          push: false
+          tags: tomodachi-frontend:ci

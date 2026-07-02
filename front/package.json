@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "verify:runtime-config": "node scripts/verify-runtime-config.mjs",
     "visual:qa": "node scripts/visual-qa.mjs"
   },
   "dependencies": {

@@ -12,6 +12,9 @@ on:
       - "front/**"
       - "scripts/deploy.*"
 
+permissions:
+  contents: read
+
 jobs:
   linux-live-deploy:
     name: Linux live Docker deploy

@@ -3,8 +3,11 @@ import { RouterProvider } from "@tanstack/react-router";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { Toaster } from "sonner";
+import { appConfig } from "./config/runtimeConfig";
 import { router } from "./router";
 import "./styles.css";
+
+void appConfig;
 
 const rootElement = document.getElementById("root");
 

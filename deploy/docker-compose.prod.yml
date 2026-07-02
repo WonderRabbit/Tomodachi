@@ -1,0 +1,74 @@
+services:
+  db:
+    ports: !reset []
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tomodachi}
+      POSTGRES_USER: ${POSTGRES_USER:-tomodachi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    restart: unless-stopped
+
+  backend:
+    image: ${TOMODACHI_BACKEND_IMAGE:-ghcr.io/wonderrabbit/tomodachi-backend}:${TOMODACHI_IMAGE_TAG:-prod}
+    build: !reset null
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      TOMODACHI_DATABASE_URL: ${TOMODACHI_DATABASE_URL:-jdbc:postgresql://db:5432/tomodachi}
+      TOMODACHI_DATABASE_USER: ${TOMODACHI_DATABASE_USER:-tomodachi}
+      TOMODACHI_DATABASE_PASSWORD: ${TOMODACHI_DATABASE_PASSWORD:?TOMODACHI_DATABASE_PASSWORD is required}
+    ports: !reset []
+    restart: unless-stopped
+
+  frontend:
+    image: ${TOMODACHI_FRONTEND_IMAGE:-ghcr.io/wonderrabbit/tomodachi-frontend}:${TOMODACHI_IMAGE_TAG:-prod}
+    build: !reset null
+    ports: !reset []
+    restart: unless-stopped
+
+  reverse-proxy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    environment:
+      TOMODACHI_DOMAIN: ${TOMODACHI_DOMAIN:?TOMODACHI_DOMAIN is required for prod reverse-proxy}
+      TOMODACHI_TLS_EMAIL: ${TOMODACHI_TLS_EMAIL:?TOMODACHI_TLS_EMAIL is required for prod reverse-proxy}
+    ports:
+      - "${TOMODACHI_PUBLIC_HTTP_BIND:-0.0.0.0:80}:80"
+      - "${TOMODACHI_PUBLIC_HTTPS_BIND:-0.0.0.0:443}:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - tomodachi-caddy-data:/data
+      - tomodachi-caddy-config:/config
+
+  db-backup:
+    image: postgres:17-alpine
+    profiles:
+      - backup
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TOMODACHI_ENV: prod
+      POSTGRES_DB: ${POSTGRES_DB:-tomodachi}
+      TOMODACHI_DATABASE_USER: ${TOMODACHI_DATABASE_USER:-tomodachi}
+      TOMODACHI_DATABASE_PASSWORD: ${TOMODACHI_DATABASE_PASSWORD:?TOMODACHI_DATABASE_PASSWORD is required}
+    volumes:
+      - tomodachi-postgres-backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      'ts=$$(date +%Y%m%d%H%M%S);
+      PGPASSWORD="$${TOMODACHI_DATABASE_PASSWORD}" pg_dump -h db -U "$${TOMODACHI_DATABASE_USER}" -d "$${POSTGRES_DB}" -Fc > "/backups/tomodachi-$${TOMODACHI_ENV}-$${ts}.dump";
+      ls -lh /backups'
+
+volumes:
+  tomodachi-postgres-data:
+    name: ${TOMODACHI_DB_VOLUME:-tomodachi-prod-postgres-data}
+  tomodachi-postgres-backups:
+    name: ${TOMODACHI_BACKUP_VOLUME:-tomodachi-prod-postgres-backups}
+  tomodachi-caddy-data:
+    name: ${COMPOSE_PROJECT_NAME:-tomodachi-prod}-caddy-data
+  tomodachi-caddy-config:
+    name: ${COMPOSE_PROJECT_NAME:-tomodachi-prod}-caddy-config

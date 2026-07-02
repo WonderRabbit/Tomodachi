@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: deploy/backend.Dockerfile
     environment:
-      SPRING_PROFILES_ACTIVE: deploy
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       TOMODACHI_DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-tomodachi}
       TOMODACHI_DATABASE_USER: ${POSTGRES_USER:-tomodachi}
       TOMODACHI_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-tomodachi_local_password}

@@ -28,3 +28,35 @@ spring:
     open-in-view: false
   flyway:
     enabled: false
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: ${TOMODACHI_DATABASE_URL:jdbc:postgresql://localhost:5432/tomodachi_dev}
+    username: ${TOMODACHI_DATABASE_USER:tomodachi}
+    password: ${TOMODACHI_DATABASE_PASSWORD:tomodachi}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: false
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${TOMODACHI_DATABASE_URL}
+    username: ${TOMODACHI_DATABASE_USER}
+    password: ${TOMODACHI_DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: false

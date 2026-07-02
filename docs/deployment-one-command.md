@@ -2,6 +2,8 @@
 
 이 문서는 Windows PowerShell 7.6과 macOS zsh에서 같은 배포 구조를 사용해 Tomodachi MVP, PostgreSQL 데이터베이스, 백엔드, 프런트를 한 번에 올리는 절차다. 기본 개발 모드의 H2 설정은 유지하고, 배포 명령만 Docker Compose와 PostgreSQL을 사용한다.
 
+> 네 가지 운영 경로별 상세 runbook은 [deployment-step-by-step.md](./deployment-step-by-step.md)를 먼저 본다. 특히 `winget`과 Docker를 사용할 수 없는 Windows PowerShell 환경은 이 문서의 `scripts/deploy.ps1` 경로가 아니라 native PostgreSQL/JDK/Node 설치 경로를 사용해야 한다.
+
 ## 결론
 
 | 환경 | 한 번 명령 | 결과 |
@@ -119,7 +121,7 @@ macOS:
 2. `deploy/docker-compose.yml`을 읽고 `deploy/.env` 또는 `deploy/.env.example` 값을 적용한다.
 3. PostgreSQL container를 만들고 `db/init.sql`을 `/docker-entrypoint-initdb.d/001-init.sql`로 mount한다.
 4. PostgreSQL healthcheck가 `healthy`가 될 때까지 backend 시작을 기다린다.
-5. backend image를 빌드하고 `SPRING_PROFILES_ACTIVE=deploy`로 실행한다.
+5. backend image를 빌드하고 `SPRING_PROFILES_ACTIVE=dev`로 실행한다.
 6. frontend image를 빌드하고 nginx로 정적 파일을 serving한다.
 7. `http://127.0.0.1:8080/actuator/health`가 응답할 때까지 기다린 뒤 frontend URL을 출력한다.
 
@@ -207,7 +209,7 @@ pwsh -File .\scripts\deploy.ps1 config
 | `deploy/frontend.Dockerfile` | frontend build/nginx runtime image. |
 | `deploy/nginx.conf` | React Router용 SPA fallback. |
 | `db/init.sql` | PostgreSQL empty volume 최초 schema mirror. |
-| `backend/src/main/resources/application.yml` | `deploy` profile에서 PostgreSQL schema validate 사용. |
+| `backend/src/main/resources/application.yml` | `dev`/`prod` profile에서 PostgreSQL schema validate 사용. |
 
 ## 10. 검증 매트릭스
 

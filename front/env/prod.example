@@ -1,0 +1,3 @@
+# Copy to .env.prod for a production target, then build with: npm run build -- --mode prod
+VITE_TOMODACHI_ENV=prod
+VITE_TOMODACHI_API_BASE_URL=https://api.tomodachi.example

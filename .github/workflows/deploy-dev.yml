@@ -1,0 +1,183 @@
+name: Deploy Dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: GHCR image tag to deploy.
+        required: false
+        default: main
+        type: string
+  workflow_run:
+    workflows:
+      - Publish Images
+    branches:
+      - main
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  DEPLOY_ENV: dev
+  OVERLAY_FILE: deploy/docker-compose.dev.yml
+  REMOTE_ENV_FILE: deploy/.env.dev
+  TOMODACHI_IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.image_tag || 'main' }}
+
+jobs:
+  deploy:
+    name: Deploy dev Compose stack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve GHCR image owner
+        id: image-owner
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate deployment inputs
+        env:
+          SSH_PORT: ${{ secrets.TOMODACHI_DEV_SSH_PORT || '22' }}
+          SSH_HOST: ${{ secrets.TOMODACHI_DEV_SSH_HOST }}
+          SSH_USER: ${{ secrets.TOMODACHI_DEV_SSH_USER }}
+          SSH_KNOWN_HOSTS: ${{ secrets.TOMODACHI_DEV_SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY: ${{ secrets.TOMODACHI_DEV_SSH_PRIVATE_KEY }}
+          REMOTE_DIR: ${{ vars.TOMODACHI_DEV_DEPLOY_PATH || 'tomodachi-dev' }}
+          GHCR_USERNAME: ${{ secrets.TOMODACHI_DEV_GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.TOMODACHI_DEV_GHCR_TOKEN }}
+          POSTGRES_PASSWORD: ${{ secrets.TOMODACHI_DEV_POSTGRES_PASSWORD }}
+          TOMODACHI_DATABASE_PASSWORD: ${{ secrets.TOMODACHI_DEV_DATABASE_PASSWORD }}
+          TOMODACHI_DOMAIN: ${{ vars.TOMODACHI_DEV_DOMAIN }}
+          TOMODACHI_TLS_EMAIL: ${{ vars.TOMODACHI_DEV_TLS_EMAIL }}
+          TOMODACHI_PUBLIC_HTTP_BIND: ${{ vars.TOMODACHI_DEV_PUBLIC_HTTP_BIND || '0.0.0.0:80' }}
+          TOMODACHI_PUBLIC_HTTPS_BIND: ${{ vars.TOMODACHI_DEV_PUBLIC_HTTPS_BIND || '0.0.0.0:443' }}
+        run: |
+          missing=0
+          for name in SSH_HOST SSH_USER SSH_PRIVATE_KEY SSH_KNOWN_HOSTS GHCR_USERNAME GHCR_TOKEN POSTGRES_PASSWORD TOMODACHI_DATABASE_PASSWORD TOMODACHI_DOMAIN TOMODACHI_TLS_EMAIL TOMODACHI_IMAGE_TAG; do
+            if [ -z "${!name:-}" ]; then
+              echo "missing required dev deployment input: $name" >&2
+              missing=1
+            fi
+          done
+
+          for name in SSH_HOST SSH_USER SSH_PORT REMOTE_DIR GHCR_USERNAME GHCR_TOKEN POSTGRES_PASSWORD TOMODACHI_DATABASE_PASSWORD TOMODACHI_DOMAIN TOMODACHI_TLS_EMAIL TOMODACHI_PUBLIC_HTTP_BIND TOMODACHI_PUBLIC_HTTPS_BIND TOMODACHI_IMAGE_TAG; do
+            value="${!name:-}"
+            newline_count="$(printf '%s' "$value" | wc -l | tr -d '[:space:]')"
+            if [ "$newline_count" -ne 0 ] || printf '%s' "$value" | LC_ALL=C tr -d '\n' | grep -Eq "[[:cntrl:]']"; then
+              echo "invalid control character or single quote in $name" >&2
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Write deploy env file
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.TOMODACHI_DEV_POSTGRES_PASSWORD }}
+          TOMODACHI_DATABASE_PASSWORD: ${{ secrets.TOMODACHI_DEV_DATABASE_PASSWORD }}
+          TOMODACHI_DOMAIN: ${{ vars.TOMODACHI_DEV_DOMAIN }}
+          TOMODACHI_TLS_EMAIL: ${{ vars.TOMODACHI_DEV_TLS_EMAIL }}
+          TOMODACHI_PUBLIC_HTTP_BIND: ${{ vars.TOMODACHI_DEV_PUBLIC_HTTP_BIND || '0.0.0.0:80' }}
+          TOMODACHI_PUBLIC_HTTPS_BIND: ${{ vars.TOMODACHI_DEV_PUBLIC_HTTPS_BIND || '0.0.0.0:443' }}
+        run: |
+          cleanup_deploy_env_on_error() {
+            rm -f deploy.env
+          }
+          trap cleanup_deploy_env_on_error ERR
+          umask 077
+          cat > deploy.env <<EOF
+          TOMODACHI_ENV=dev
+          SPRING_PROFILES_ACTIVE=dev
+          COMPOSE_PROJECT_NAME=tomodachi-dev
+          POSTGRES_DB=tomodachi
+          POSTGRES_USER=tomodachi
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          TOMODACHI_DATABASE_URL=jdbc:postgresql://db:5432/tomodachi
+          TOMODACHI_DATABASE_USER=tomodachi
+          TOMODACHI_DATABASE_PASSWORD=${TOMODACHI_DATABASE_PASSWORD}
+          TOMODACHI_BACKEND_IMAGE=ghcr.io/${{ steps.image-owner.outputs.owner }}/tomodachi-backend
+          TOMODACHI_FRONTEND_IMAGE=ghcr.io/${{ steps.image-owner.outputs.owner }}/tomodachi-frontend
+          TOMODACHI_IMAGE_TAG=${TOMODACHI_IMAGE_TAG}
+          TOMODACHI_DOMAIN=${TOMODACHI_DOMAIN}
+          TOMODACHI_TLS_EMAIL=${TOMODACHI_TLS_EMAIL}
+          TOMODACHI_PUBLIC_HTTP_BIND=${TOMODACHI_PUBLIC_HTTP_BIND}
+          TOMODACHI_PUBLIC_HTTPS_BIND=${TOMODACHI_PUBLIC_HTTPS_BIND}
+          TOMODACHI_DB_VOLUME=tomodachi-dev-postgres-data
+          TOMODACHI_BACKUP_VOLUME=tomodachi-dev-postgres-backups
+          EOF
+          sed -i 's/^          //' deploy.env
+          chmod 600 deploy.env
+          mode="$(stat -c '%a' deploy.env)"
+          if [ "$mode" != "600" ]; then
+            echo "deploy.env has invalid file mode: $mode" >&2
+            exit 1
+          fi
+          sh deploy/validate-compose-env.sh --env-file deploy.env
+          trap - ERR
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.TOMODACHI_DEV_SSH_PRIVATE_KEY }}
+
+      - name: Configure SSH known hosts
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.TOMODACHI_DEV_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload Compose bundle
+        env:
+          SSH_PORT: ${{ secrets.TOMODACHI_DEV_SSH_PORT || '22' }}
+          SSH_HOST: ${{ secrets.TOMODACHI_DEV_SSH_HOST }}
+          SSH_USER: ${{ secrets.TOMODACHI_DEV_SSH_USER }}
+          REMOTE_DIR: ${{ vars.TOMODACHI_DEV_DEPLOY_PATH || 'tomodachi-dev' }}
+        run: |
+          cleanup_local_deploy_files() {
+            rm -f tomodachi-dev-compose.tgz deploy.env
+          }
+          trap cleanup_local_deploy_files EXIT
+          tar -czf tomodachi-dev-compose.tgz deploy/docker-compose.yml "$OVERLAY_FILE" deploy/Caddyfile db/init.sql
+          target="${SSH_USER}@${SSH_HOST}"
+          remote_bundle_tmp="/tmp/tomodachi-dev-compose-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tgz"
+          remote_env_tmp="/tmp/tomodachi-dev-deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.env"
+          ssh -p "$SSH_PORT" "$target" "mkdir -p '$REMOTE_DIR'"
+          scp -P "$SSH_PORT" tomodachi-dev-compose.tgz "$target:$remote_bundle_tmp"
+          scp -P "$SSH_PORT" deploy.env "$target:$remote_env_tmp"
+          ssh -p "$SSH_PORT" "$target" "set -eu
+            bundle_tmp='$remote_bundle_tmp'
+            env_tmp='$remote_env_tmp'
+            trap 'rm -f \"\$bundle_tmp\" \"\$env_tmp\"' EXIT
+            chmod 600 \"\$env_tmp\"
+            cd '$REMOTE_DIR'
+            tar -xzf \"\$bundle_tmp\"
+            install -m 600 \"\$env_tmp\" '$REMOTE_ENV_FILE'
+            chmod 600 '$REMOTE_ENV_FILE'"
+
+      - name: Pull and restart dev stack
+        env:
+          SSH_PORT: ${{ secrets.TOMODACHI_DEV_SSH_PORT || '22' }}
+          SSH_HOST: ${{ secrets.TOMODACHI_DEV_SSH_HOST }}
+          SSH_USER: ${{ secrets.TOMODACHI_DEV_SSH_USER }}
+          REMOTE_DIR: ${{ vars.TOMODACHI_DEV_DEPLOY_PATH || 'tomodachi-dev' }}
+          GHCR_USERNAME: ${{ secrets.TOMODACHI_DEV_GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.TOMODACHI_DEV_GHCR_TOKEN }}
+        run: |
+          target="${SSH_USER}@${SSH_HOST}"
+          printf '%s' "$GHCR_TOKEN" | ssh -p "$SSH_PORT" "$target" "docker login ghcr.io -u '$GHCR_USERNAME' --password-stdin"
+          ssh -p "$SSH_PORT" "$target" "cd '$REMOTE_DIR' && docker compose --env-file '$REMOTE_ENV_FILE' -f deploy/docker-compose.yml -f '$OVERLAY_FILE' --project-directory . config 1>/dev/null"
+          ssh -p "$SSH_PORT" "$target" "cd '$REMOTE_DIR' && docker compose --env-file '$REMOTE_ENV_FILE' -f deploy/docker-compose.yml -f '$OVERLAY_FILE' --project-directory . pull"
+          ssh -p "$SSH_PORT" "$target" "cd '$REMOTE_DIR' && docker compose --env-file '$REMOTE_ENV_FILE' -f deploy/docker-compose.yml -f '$OVERLAY_FILE' --project-directory . up -d"
+          ssh -p "$SSH_PORT" "$target" "cd '$REMOTE_DIR' && docker compose --env-file '$REMOTE_ENV_FILE' -f deploy/docker-compose.yml -f '$OVERLAY_FILE' --project-directory . ps"
