@@ -14,7 +14,9 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
-import { ProjectBoardPage, ProjectDetailPage, ProjectsPage } from "./pages/ProjectsPage";
+import { ProjectBoardPage } from "./pages/ProjectBoardPage";
+import { ProjectDetailPage } from "./pages/ProjectDetailPage";
+import { ProjectsPage } from "./pages/ProjectsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TaskDetailPage, TasksPage } from "./pages/TasksPage";
 

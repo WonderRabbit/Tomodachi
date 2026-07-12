@@ -40,6 +40,15 @@ export interface Project {
   latestAgentRunId: string;
 }
 
+export interface ProjectSummary {
+  id: string;
+  key: string;
+  name: string;
+  owner: string;
+  status: HealthStatus;
+  progress: number;
+}
+
 export interface Task {
   id: string;
   number: string;
@@ -52,6 +61,16 @@ export interface Task {
   agentRunIds: string[];
   updated: string;
   blockerReason?: string;
+}
+
+export interface TaskSummary {
+  id: string;
+  number: string;
+  projectId: string;
+  title: string;
+  status: TaskStatus;
+  priority: Priority;
+  assignee: string;
 }
 
 export interface ArchitectureArtifact {

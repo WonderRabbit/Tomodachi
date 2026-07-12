@@ -1,130 +1,102 @@
-import { Link, useParams } from "@tanstack/react-router";
-import { artifacts, agentRuns, projects, taskStatuses, tasks } from "../mockData";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { requestProjects } from "../api/projectsClient";
+import { isApiClientError } from "../api/http";
 import { Badge, Card, EmptyState, PageHeader, ProgressBar } from "../components/Primitives";
 import { statusTone } from "../components/status";
+import type { ProjectSummary } from "../types";
+import { useUnauthorizedRedirect } from "./authRedirect";
 
 export function ProjectsPage() {
+  const navigate = useNavigate();
+  const projectsQuery = useQuery({
+    queryFn: ({ signal }) => requestProjects(signal),
+    queryKey: ["projects"],
+    retry: false,
+  });
+
+  useUnauthorizedRedirect(projectsQuery.error, navigate);
+
   return (
     <div className="page-stack">
       <PageHeader
         eyebrow="Lifecycle"
         title="Projects"
-        detail="Saved views for active, blocked, review-needed, and architecture-unlinked work."
+        detail="Backend-owned project health, ownership, and delivery progress."
       />
+      <ProjectsContent
+        error={projectsQuery.error}
+        isLoading={projectsQuery.isLoading}
+        onRetry={() => {
+          void projectsQuery.refetch();
+        }}
+        projects={projectsQuery.data ?? []}
+      />
+    </div>
+  );
+}
+
+function ProjectsContent({
+  error,
+  isLoading,
+  onRetry,
+  projects,
+}: {
+  readonly error: Error | null;
+  readonly isLoading: boolean;
+  readonly onRetry: () => void;
+  readonly projects: readonly ProjectSummary[];
+}) {
+  if (isLoading) {
+    return <EmptyState title="Loading projects" detail="Fetching project summaries from the backend." />;
+  }
+
+  if (isApiClientError(error) && error.status === 403) {
+    return <EmptyState title="Forbidden" detail="Your current role cannot read project summaries." />;
+  }
+
+  if (error !== null) {
+    return (
+      <div className="empty-state">
+        <strong>Projects unavailable</strong>
+        <span>Backend project summaries could not be loaded.</span>
+        <button className="button" type="button" onClick={onRetry}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return <EmptyState title="No projects" detail="The backend returned an empty project list." />;
+  }
+
+  const blockedCount = projects.filter((item) => item.status === "Blocked").length;
+  const averageProgress = Math.round(projects.reduce((sum, item) => sum + item.progress, 0) / projects.length);
+
+  return (
+    <>
       <section className="metric-grid compact">
         <Card><strong>{projects.length}</strong><span>tracked projects</span></Card>
-        <Card><strong>{projects.filter((item) => item.status === "Blocked").length}</strong><span>blocked</span></Card>
-        <Card><strong>{tasks.filter((task) => task.status === "Review").length}</strong><span>in review</span></Card>
-        <Card><strong>{tasks.filter((task) => task.status === "Done").length}</strong><span>done this week</span></Card>
+        <Card><strong>{blockedCount}</strong><span>blocked</span></Card>
+        <Card><strong>{averageProgress}%</strong><span>average progress</span></Card>
+        <Card><strong>API</strong><span>backend source</span></Card>
       </section>
       <Card title="Project list">
         <div className="list-stack">
           {projects.map((project) => (
-            <Link
-              key={project.id}
-              to="/projects/$projectId"
-              params={{ projectId: project.id }}
-              className="project-row"
-            >
+            <Link key={project.id} to="/projects/$projectId" params={{ projectId: project.id }} className="project-row">
               <div>
                 <strong>{project.key}</strong>
                 <span>{project.name}</span>
               </div>
               <ProgressBar value={project.progress} />
               <Badge tone={statusTone(project.status)}>{project.status}</Badge>
-              <span className="muted">{project.linkedArtifacts} artifacts</span>
+              <span className="muted">{project.owner}</span>
             </Link>
           ))}
         </div>
       </Card>
-    </div>
-  );
-}
-
-export function ProjectDetailPage() {
-  const { projectId } = useParams({ from: "/projects/$projectId" });
-  const project = projects.find((item) => item.id === projectId);
-
-  if (project === undefined) {
-    return <EmptyState title="Project not found" detail="The requested project id is not in the current dataset." />;
-  }
-
-  const projectTasks = tasks.filter((task) => task.projectId === project.id);
-  const run = agentRuns.find((item) => item.id === project.latestAgentRunId);
-
-  return (
-    <div className="page-stack">
-      <PageHeader
-        eyebrow={project.key}
-        title={project.name}
-        detail={`${project.owner} owns this stream. Due ${project.due}.`}
-        actions={<Link className="button" to="/projects/$projectId/tasks/board" params={{ projectId }}>Open board</Link>}
-      />
-      <section className="dashboard-grid">
-        <Card title="Progress">
-          <ProgressBar value={project.progress} />
-          <p>{project.progress}% complete with {project.blockers} blockers.</p>
-        </Card>
-        <Card title="Latest agent run">
-          {run === undefined ? (
-            <EmptyState title="No run" detail="No backend-normalized agent run is linked yet." />
-          ) : (
-            <Link to="/agent-runs/$runId" params={{ runId: run.id }} className="review-row">
-              <Badge tone={statusTone(run.status)}>{run.status}</Badge>
-              <span>{run.summary}</span>
-            </Link>
-          )}
-        </Card>
-      </section>
-      <Card title="Project tasks">
-        <div className="status-board small-board">
-          {taskStatuses.map((status) => (
-            <div key={status} className="board-column">
-              <h3>{status}</h3>
-              {projectTasks.filter((task) => task.status === status).map((task) => (
-                <Link key={task.id} to="/tasks/$taskId" params={{ taskId: task.id }} className="task-card">
-                  <strong>{task.number}</strong>
-                  <span>{task.title}</span>
-                </Link>
-              ))}
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-export function ProjectBoardPage() {
-  const { projectId } = useParams({ from: "/projects/$projectId/tasks/board" });
-  const project = projects.find((item) => item.id === projectId);
-  const projectTasks = tasks.filter((task) => task.projectId === projectId);
-
-  if (project === undefined) {
-    return <EmptyState title="Project not found" detail="Board context could not be restored from the route." />;
-  }
-
-  return (
-    <div className="page-stack">
-      <PageHeader
-        eyebrow={`${project.key} board`}
-        title="Task board"
-        detail="Status columns preserve the transition contract used by task detail."
-      />
-      <div className="status-board">
-        {taskStatuses.map((status) => (
-          <section key={status} className="board-column">
-            <h3>{status}</h3>
-            {projectTasks.filter((task) => task.status === status).map((task) => (
-              <Link key={task.id} to="/tasks/$taskId" params={{ taskId: task.id }} className="task-card">
-                <strong>{task.number}</strong>
-                <span>{task.title}</span>
-                <span className="muted">{task.assignee} · {task.artifacts.length} artifacts</span>
-              </Link>
-            ))}
-          </section>
-        ))}
-      </div>
-    </div>
+    </>
   );
 }
