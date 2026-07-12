@@ -16,6 +16,9 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.stereotype.Component
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.OncePerRequestFilter
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -71,6 +74,7 @@ class SecurityConfig(private val bearerFilter: BearerFilter) {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain =
         http
+            .cors { }
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
@@ -79,4 +83,18 @@ class SecurityConfig(private val bearerFilter: BearerFilter) {
             }
             .addFilterBefore(bearerFilter, UsernamePasswordAuthenticationFilter::class.java)
             .build()
+
+    @Bean
+    fun corsConfigurationSource(): CorsConfigurationSource {
+        val configuration = CorsConfiguration()
+        configuration.allowedOrigins = listOf("http://127.0.0.1:5173", "http://localhost:5173")
+        configuration.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+        configuration.allowedHeaders = listOf("Authorization", "Content-Type", "Idempotency-Key")
+        configuration.exposedHeaders = listOf("Location")
+        configuration.allowCredentials = false
+
+        val source = UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/api/**", configuration)
+        return source
+    }
 }

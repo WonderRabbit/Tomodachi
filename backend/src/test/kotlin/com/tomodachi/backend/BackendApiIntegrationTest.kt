@@ -2,6 +2,7 @@ package com.tomodachi.backend
 
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.startsWith
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -27,6 +28,30 @@ class BackendApiIntegrationTest(
     @Autowired private val audits: AuditEventRepository,
     @Autowired private val outbox: OutboxEventRepository,
 ) {
+    @Test
+    fun `login returns bearer token for seeded user`() {
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"email":"admin@tomodachi.local","password":"password"}"""),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.tokenType").value("Bearer"))
+            .andExpect(jsonPath("$.accessToken").value(startsWith("test-token-")))
+    }
+
+    @Test
+    fun `login rejects bad credentials`() {
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"email":"admin@tomodachi.local","password":"wrong-password"}"""),
+        )
+            .andExpect(status().isUnauthorized)
+            .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+            .andExpect(jsonPath("$.message").value("Bad credentials"))
+    }
+
     @Test
     fun `viewer can read tasks but cannot create tasks`() {
         val viewerToken = login("viewer@tomodachi.local", "password")

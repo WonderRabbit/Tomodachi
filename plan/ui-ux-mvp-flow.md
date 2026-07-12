@@ -2,7 +2,7 @@
 
 <!-- ui-contract-plan: v1 -->
 
-**계약 검증 기준:** repository `0a07266d53b83cd07017ec912c616eecbcc3d693` / UI 계획 원본 `49640fc67d3384f04a13878b6a3b6cfc7fb3687d` / 2026-07-12 KST
+**계약 검증 기준:** repository `0a07266d53b83cd07017ec912c616eecbcc3d693` / UI 계획 원본 `49640fc67d3384f04a13878b6a3b6cfc7fb3687d` / 로그인 계약 갱신 2026-07-12 KST
 
 ## 목적
 
@@ -19,7 +19,7 @@
 
 ## 현재 MVP 계약
 
-현재 UI route는 `front/src/router.tsx`에 선언된 12개 route다. 화면 데이터는 frontend mock query boundary가 소유한다. backend controller가 존재하더라도 frontend의 production data source로 연결됐다는 뜻은 아니다.
+현재 UI route는 `front/src/router.tsx`에 선언된 13개 route다. `/login`은 인증 API만 직접 호출하며, 나머지 화면 데이터는 frontend mock query boundary가 소유한다. backend controller가 존재하더라도 frontend의 production data source로 연결됐다는 뜻은 아니다.
 
 | 상태 | Route | Owner | Source | 인수 테스트 |
 | --- | --- | --- | --- | --- |
@@ -35,13 +35,14 @@
 | Current | `/agent-runs` | Frontend | `front/src/router.tsx` | agent run 목록 route가 현재 router tree에 포함된다. |
 | Current | `/agent-runs/$runId` | Frontend | `front/src/router.tsx` | run id route parameter로 상세 화면을 연다. |
 | Current | `/settings` | Frontend | `front/src/router.tsx` | settings route가 현재 router tree에 포함된다. |
+| Current | `/login` | Frontend/Auth | `front/src/router.tsx` | auth login 응답 adapter가 `POST /api/auth/login` 성공/401 계약과 함께 동작한다. |
 
 현재 backend에서 이 문서가 이름으로 참조하는 API는 다음 둘이다. 이는 endpoint 구현 상태만 뜻하며 frontend 연동 상태는 아니다.
 
 | 상태 | API claim | Owner | Source | 인수 테스트 |
 | --- | --- | --- | --- | --- |
 | Current | `GET /api/products` | Backend lifecycle | `backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt` | validator가 controller mapping/source를 확인한다. 응답 shape MockMvc test는 frontend 연동 전 추가해야 하는 gap이다. |
-| Current | `POST /api/auth/login` | Backend auth | `backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt` | validator가 controller mapping/source를 확인한다. 성공과 401 응답을 함께 고정하는 MockMvc test는 frontend 연동 전 완료해야 한다. |
+| Current | `POST /api/auth/login` | Backend auth | `backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt` | validator가 controller mapping/source를 확인하고, 성공 bearer token과 401 bad credentials MockMvc test가 계약을 고정한다. |
 
 ## Backend 연동 계획
 
@@ -49,7 +50,6 @@
 
 | 상태 | Route/API claim | Owner | Source target | 구현 전 인수 테스트 |
 | --- | --- | --- | --- | --- |
-| Planned | `/login` | Frontend/Auth | `front/src/router.tsx` | login route와 unauthenticated redirect test가 추가되고 auth login 응답 adapter contract가 통과한다. |
 | Planned | `/products/$productId` | Frontend/Lifecycle | `front/src/router.tsx` | product detail route와 product-detail MockMvc contract가 함께 통과한다. |
 | Planned | `/workspaces/$workspaceId` | Frontend/Lifecycle | future route module | workspace detail route/API의 DTO와 navigation contract test가 먼저 승인된다. |
 | Planned | `GET /api/search` | Backend search | future `SearchController.kt` | task/project/artifact/agent-run union response contract와 permission-filter MockMvc test가 통과한다. |
@@ -57,7 +57,7 @@
 | Planned | `GET /api/products/{productId}` | Backend lifecycle | `backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt` | 존재/미존재 product에 대한 200/404 MockMvc contract가 통과한다. |
 | Planned | `GET /api/integrations/opencode/sync-summary` | Backend integration | future `IntegrationController.kt` | last sync와 failed webhook count DTO, stale/error state contract test가 통과한다. |
 
-연동 전환 gate는 adapter/fixture contract, panel 단위 loading/error/forbidden fallback, frontend typecheck/build, backend MockMvc contract, visual QA, rollback 확인이 모두 통과하는 것이다. 그 전까지 `dataSource: "mock"`과 `backendIntegrationEnabled: false`를 유지한다.
+연동 전환 gate는 adapter/fixture contract, panel 단위 loading/error/forbidden fallback, frontend typecheck/build, backend MockMvc contract, visual QA, rollback 확인이 모두 통과하는 것이다. 로그인은 인증 API에 한정된 예외이며, 그 외 화면은 `dataSource: "mock"`과 `backendIntegrationEnabled: false`를 유지한다.
 
 ## UI 방향
 
@@ -421,7 +421,7 @@ Mobile에서도 기능을 숨기지 않는다. 다만 board는 columns를 horizo
 
 ### Alpha UI
 
-이 목록은 원래의 delivery priority다. 현재 구현 여부는 위 contract 표를 따른다. `/login`은 Planned이고 나머지 나열 route는 Current다.
+이 목록은 원래의 delivery priority다. 현재 구현 여부는 위 contract 표를 따른다. `/login`과 나머지 나열 route는 Current다.
 
 1. `/login`
 2. AppShell

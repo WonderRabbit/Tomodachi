@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   Boxes,
@@ -12,7 +12,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { clearAuthSession, loadAuthSession } from "../auth/session";
 import { products } from "../mockData";
 import { useUiStore } from "../store";
 import type { HealthStatus, NavItem } from "../types";
@@ -33,13 +34,21 @@ const navItems: ShellNavItem[] = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const sidebarCollapsed = useUiStore((state) => state.sidebarCollapsed);
   const detailRailOpen = useUiStore((state) => state.detailRailOpen);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
   const toggleDetailRail = useUiStore((state) => state.toggleDetailRail);
+  const [session, setSession] = useState(() => loadAuthSession());
   const primaryProduct = products[0];
   const productName = primaryProduct?.name ?? "No product";
   const productStatus: HealthStatus = primaryProduct?.status ?? "Watch";
+
+  function handleSignOut() {
+    clearAuthSession();
+    setSession(null);
+    void navigate({ to: "/login" });
+  }
 
   return (
     <div className={`app-shell ${sidebarCollapsed ? "is-collapsed" : ""}`}>
@@ -81,7 +90,23 @@ export function AppShell({ children }: { children: ReactNode }) {
             <input placeholder="Search tasks, artifacts, agent runs" />
           </label>
           <div className="topbar-actions">
-            <Badge tone="success">Sync 12m ago</Badge>
+            <span className="sync-status">
+              <Badge tone="success">Sync 12m ago</Badge>
+            </span>
+            {session === null ? (
+              <Link to="/login" className="button">
+                Sign in
+              </Link>
+            ) : (
+              <>
+                <span className="auth-email">
+                  <Badge tone="accent">{session.email}</Badge>
+                </span>
+                <button className="button" type="button" onClick={handleSignOut}>
+                  Sign out
+                </button>
+              </>
+            )}
             <button className="icon-button" type="button">
               <Bell size={18} />
             </button>

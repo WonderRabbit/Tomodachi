@@ -3,28 +3,46 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  useLocation,
 } from "@tanstack/react-router";
 import { AppShell } from "./components/AppShell";
 import { AgentRunDetailPage, AgentRunsPage } from "./pages/AgentRunsPage";
 import { ArchitectureDetailPage, ArchitecturePage } from "./pages/ArchitecturePage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { LoginPage } from "./pages/LoginPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { ProjectBoardPage, ProjectDetailPage, ProjectsPage } from "./pages/ProjectsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TaskDetailPage, TasksPage } from "./pages/TasksPage";
 
 const rootRoute = createRootRoute({
-  component: () => (
+  component: RootLayout,
+});
+
+function RootLayout() {
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  if (pathname === "/login") {
+    return <Outlet />;
+  }
+
+  return (
     <AppShell>
       <Outlet />
     </AppShell>
-  ),
-});
+  );
+}
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: DashboardPage,
+});
+
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/login",
+  component: LoginPage,
 });
 
 const productsRoute = createRoute({
@@ -95,6 +113,7 @@ const settingsRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  loginRoute,
   productsRoute,
   projectsRoute,
   projectDetailRoute,
