@@ -73,10 +73,11 @@ const api = ky.create({
 
 export async function apiJson(path: string, options?: Options): Promise<unknown> {
   try {
-    return await api(path, options).json<unknown>();
+    const response = await api(path, options);
+    return await response.json();
   } catch (error) {
     if (error instanceof HTTPError || isHttpErrorLike(error)) {
-      throw await apiErrorFromResponse(error.response);
+      throw await apiErrorFromHttpErrorResponse(error.response);
     }
 
     throw error;
@@ -110,6 +111,21 @@ async function apiErrorFromResponse(response: Response): Promise<ApiClientError>
     code: "API_REQUEST_FAILED",
     status: response.status,
   });
+}
+
+async function apiErrorFromHttpErrorResponse(response: Response): Promise<ApiClientError> {
+  try {
+    return await apiErrorFromResponse(response.clone());
+  } catch (error) {
+    if (error instanceof TypeError) {
+      return new ApiClientError("API request failed.", {
+        code: "API_REQUEST_FAILED",
+        status: response.status,
+      });
+    }
+
+    throw error;
+  }
 }
 
 async function safeJson(response: Response): Promise<unknown> {
