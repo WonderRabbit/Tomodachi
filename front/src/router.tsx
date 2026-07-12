@@ -12,7 +12,7 @@ import { AgentRunDetailPage, AgentRunsPage } from "./pages/AgentRunsPage";
 import { ArchitectureDetailPage, ArchitecturePage } from "./pages/ArchitecturePage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
-import { ProductsPage } from "./pages/ProductsPage";
+import { ProductDetailPage, ProductsPage } from "./pages/ProductsPage";
 import { ProjectBoardPage, ProjectDetailPage, ProjectsPage } from "./pages/ProjectsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TaskDetailPage, TasksPage } from "./pages/TasksPage";
@@ -55,6 +55,12 @@ const productsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/products",
   component: ProductsPage,
+});
+
+const productDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/products/$productId",
+  component: ProductDetailPage,
 });
 
 const projectsRoute = createRoute({
@@ -121,6 +127,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   productsRoute,
+  productDetailRoute,
   projectsRoute,
   projectDetailRoute,
   projectBoardRoute,

@@ -96,6 +96,30 @@ class BackendApiIntegrationTest(
     }
 
     @Test
+    fun `product detail returns frontend summary fields`() {
+        val adminToken = login("admin@tomodachi.local", "password")
+
+        mockMvc.perform(get("/api/products/product_tomodachi").bearer(adminToken))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value("product_tomodachi"))
+            .andExpect(jsonPath("$.code").value("TMD"))
+            .andExpect(jsonPath("$.name").value("Tomodachi"))
+            .andExpect(jsonPath("$.activeProjects").value(1))
+            .andExpect(jsonPath("$.openTasks").value(3))
+            .andExpect(jsonPath("$.lastActivity").isString)
+    }
+
+    @Test
+    fun `product detail returns not found json for missing product`() {
+        val adminToken = login("admin@tomodachi.local", "password")
+
+        mockMvc.perform(get("/api/products/missing-product").bearer(adminToken))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+            .andExpect(jsonPath("$.message").value("Resource not found"))
+    }
+
+    @Test
     fun `viewer can read tasks but cannot create tasks`() {
         val viewerToken = login("viewer@tomodachi.local", "password")
 

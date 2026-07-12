@@ -11,6 +11,8 @@ const routes = [
   ["/login", "Sign in to Tomodachi"],
   ["/", "Tomodachi operations"],
   ["/products", "Products"],
+  ["/products/product_tomodachi", "Product detail endpoint"],
+  ["/products/missing-product", "Product not found"],
   ["/projects", "Projects"],
   ["/projects/project_alpha", "Lifecycle dashboard alpha"],
   ["/projects/project_alpha/tasks/board", "Task board"],

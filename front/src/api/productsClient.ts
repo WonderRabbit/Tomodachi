@@ -39,6 +39,28 @@ export async function requestProducts(signal?: AbortSignal): Promise<readonly Pr
   }
 }
 
+export async function requestProduct(productId: string, signal?: AbortSignal): Promise<Product> {
+  const payload = await apiJson(`api/products/${encodeURIComponent(productId)}`, { signal });
+
+  try {
+    const product = productSchema.parse(payload);
+
+    return {
+      ...product,
+      lastActivity: formatLastActivity(product.lastActivity),
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new ApiClientError("Product response did not match the API contract.", {
+        code: "INVALID_PRODUCT_RESPONSE",
+        status: null,
+      });
+    }
+
+    throw error;
+  }
+}
+
 function formatLastActivity(value: string): string {
   const date = new Date(value);
 

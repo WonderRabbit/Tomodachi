@@ -29,6 +29,10 @@ class LifecycleController(
     @GetMapping("/products")
     fun products(): PageResponse<ProductDto> = products.findAll().map { product -> summarizeProduct(product) }.toPage()
 
+    @GetMapping("/products/{productId}")
+    fun product(@PathVariable productId: String): ProductDto =
+        summarizeProduct(products.findById(productId).orElseThrow())
+
     @GetMapping("/projects")
     fun projects(): PageResponse<ProjectDto> = projects.findAll().map { it.toDto() }.toPage()
 
