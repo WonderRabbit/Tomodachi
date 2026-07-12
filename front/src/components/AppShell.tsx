@@ -16,8 +16,8 @@ import { type ReactNode, useEffect, useState } from "react";
 import { requestCurrentUser } from "../api/authClient";
 import { isApiClientError } from "../api/http";
 import { requestOpenCodeSyncSummary } from "../api/integrationsClient";
+import { requestProducts } from "../api/productsClient";
 import { clearAuthSession, loadAuthSession } from "../auth/session";
-import { products } from "../mockData";
 import { useUiStore } from "../store";
 import type { HealthStatus, NavItem } from "../types";
 import { GlobalSearch } from "./GlobalSearch";
@@ -56,7 +56,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     queryKey: ["integrations", "opencode", "sync-summary"],
     retry: false,
   });
-  const primaryProduct = products[0];
+  const productsQuery = useQuery({
+    enabled: session !== null,
+    queryFn: ({ signal }) => requestProducts(signal),
+    queryKey: ["products", "shell-switcher"],
+    retry: false,
+  });
+  const primaryProduct = productsQuery.data?.[0];
   const productName = primaryProduct?.name ?? "No product";
   const productStatus: HealthStatus = primaryProduct?.status ?? "Watch";
   const currentUser = currentUserQuery.data;
