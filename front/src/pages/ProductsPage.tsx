@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { requestProduct, requestProducts } from "../api/productsClient";
-import { ApiClientError } from "../api/http";
+import { isApiClientError } from "../api/http";
 import { clearAuthSession } from "../auth/session";
 import { Badge, Card, EmptyState, PageHeader } from "../components/Primitives";
 import { statusTone } from "../components/status";
@@ -87,7 +87,7 @@ function ProductsContent({
     return <EmptyState title="Loading products" detail="Fetching product summaries from the backend." />;
   }
 
-  if (error instanceof ApiClientError && error.status === 403) {
+  if (isApiClientError(error) && error.status === 403) {
     return <EmptyState title="Forbidden" detail="Your current role cannot read product summaries." />;
   }
 
@@ -162,7 +162,7 @@ function ProductDetailContent({
     );
   }
 
-  if (error instanceof ApiClientError && error.status === 403) {
+  if (isApiClientError(error) && error.status === 403) {
     return (
       <Card title="Product summary">
         <EmptyState title="Forbidden" detail="Your current role cannot read this product summary." />
@@ -170,7 +170,7 @@ function ProductDetailContent({
     );
   }
 
-  if (error instanceof ApiClientError && error.status === 404) {
+  if (isApiClientError(error) && (error.status === 404 || error.code === "NOT_FOUND")) {
     return (
       <Card title="Product summary">
         <EmptyState title="Product not found" detail="The requested product id is not available from the backend." />
@@ -258,7 +258,7 @@ function ProductDetailContent({
 
 function useUnauthorizedRedirect(error: Error | null, navigate: ReturnType<typeof useNavigate>): void {
   useEffect(() => {
-    if (error instanceof ApiClientError && error.status === 401) {
+    if (isApiClientError(error) && error.status === 401) {
       clearAuthSession();
       void navigate({ to: "/login" });
     }

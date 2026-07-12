@@ -15,7 +15,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { requestCurrentUser } from "../api/authClient";
-import { ApiClientError } from "../api/http";
+import { isApiClientError } from "../api/http";
 import { clearAuthSession, loadAuthSession } from "../auth/session";
 import { products } from "../mockData";
 import { useUiStore } from "../store";
@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     const error = currentUserQuery.error;
 
-    if (error instanceof ApiClientError && error.status === 401) {
+    if (isApiClientError(error) && error.status === 401) {
       clearAuthSession();
       setSession(null);
       void navigate({ to: "/login" });

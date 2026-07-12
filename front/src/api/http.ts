@@ -21,6 +21,34 @@ export class ApiClientError extends Error {
   }
 }
 
+type ApiClientErrorLike = {
+  readonly code: string;
+  readonly message: string;
+  readonly name: string;
+  readonly status: number | null;
+};
+
+export function isApiClientError(error: unknown): error is ApiClientErrorLike {
+  if (error instanceof ApiClientError) {
+    return true;
+  }
+
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  if (!("code" in error) || !("message" in error) || !("name" in error) || !("status" in error)) {
+    return false;
+  }
+
+  return (
+    error.name === "ApiClientError" &&
+    typeof error.code === "string" &&
+    typeof error.message === "string" &&
+    (typeof error.status === "number" || error.status === null)
+  );
+}
+
 const api = ky.create({
   prefix: appConfig.apiBaseUrl,
   hooks: {
