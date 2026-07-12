@@ -19,6 +19,7 @@ import { ProjectDetailPage } from "./pages/ProjectDetailPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TaskDetailPage, TasksPage } from "./pages/TasksPage";
+import { WorkspacePage } from "./pages/WorkspacePage";
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -84,6 +85,12 @@ const projectBoardRoute = createRoute({
   component: ProjectBoardPage,
 });
 
+const workspaceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/workspaces/$workspaceId",
+  component: WorkspacePage,
+});
+
 const tasksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tasks",
@@ -134,6 +141,7 @@ const routeTree = rootRoute.addChildren([
   projectsRoute,
   projectDetailRoute,
   projectBoardRoute,
+  workspaceRoute,
   tasksRoute,
   taskDetailRoute,
   architectureRoute,

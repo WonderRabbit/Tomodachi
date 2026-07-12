@@ -89,7 +89,12 @@ function ProjectDetailContent({
         eyebrow={project.key}
         title={project.name}
         detail={`${project.owner} owns this backend project stream.`}
-        actions={<Link className="button" to="/projects/$projectId/tasks/board" params={{ projectId }}>Open board</Link>}
+        actions={
+          <div className="summary-pills">
+            <Link className="button" to="/workspaces/$workspaceId" params={{ workspaceId: project.workspaceId }}>Open workspace</Link>
+            <Link className="button" to="/projects/$projectId/tasks/board" params={{ projectId }}>Open board</Link>
+          </div>
+        }
       />
       <section className="dashboard-grid">
         <Card title="Progress">

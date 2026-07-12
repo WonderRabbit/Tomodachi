@@ -47,6 +47,7 @@ export interface ProjectSummary {
   owner: string;
   status: HealthStatus;
   progress: number;
+  workspaceId: string;
 }
 
 export interface Task {
@@ -172,6 +173,17 @@ export interface AgentRun {
   started: string;
   duration: string;
   summary: string;
+}
+
+export interface WorkspaceDetail {
+  id: string;
+  productId: string;
+  productName: string;
+  name: string;
+  owner: string;
+  projectCount: number;
+  openTasks: number;
+  projects: ProjectSummary[];
 }
 
 export interface NavItem {

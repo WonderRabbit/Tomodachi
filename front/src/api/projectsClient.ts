@@ -11,6 +11,7 @@ const projectSchema = z.object({
   owner: z.string().min(1),
   status: healthStatusSchema,
   progress: z.number().int().min(0).max(100),
+  workspaceId: z.string().min(1),
 });
 
 const projectsPageSchema = z.object({

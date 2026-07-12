@@ -18,6 +18,8 @@ const routes = [
   ["/projects/missing-project", "Project not found"],
   ["/projects/project_alpha/tasks/board", "Task board"],
   ["/projects/missing-project/tasks/board", "Project not found"],
+  ["/workspaces/workspace_core", "Core workspace"],
+  ["/workspaces/missing-workspace", "Workspace not found"],
   ["/tasks", "Cross-project execution table"],
   ["/tasks/task_seed_review", "Define transition rollback surface"],
   ["/tasks/missing-task", "Task not found"],

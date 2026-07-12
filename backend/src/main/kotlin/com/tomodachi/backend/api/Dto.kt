@@ -34,6 +34,7 @@ data class ProjectDto(
     val owner: String,
     val status: HealthStatus,
     val progress: Int,
+    val workspaceId: String,
 )
 
 data class TaskDto(
@@ -133,4 +134,15 @@ data class DashboardSummaryDto(
     val projects: List<DashboardProjectSummaryDto>,
     val reviewRuns: List<DashboardReviewRunDto>,
     val architecture: DashboardArchitectureSummaryDto,
+)
+
+data class WorkspaceDto(
+    val id: String,
+    val productId: String,
+    val productName: String,
+    val name: String,
+    val owner: String,
+    val projectCount: Int,
+    val openTasks: Int,
+    val projects: List<ProjectDto>,
 )

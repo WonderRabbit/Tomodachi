@@ -12,7 +12,7 @@ import com.tomodachi.backend.domain.Project
 import com.tomodachi.backend.domain.TaskItem
 
 fun Product.toDto(): ProductDto = ProductDto(id, code, name, status)
-fun Project.toDto(): ProjectDto = ProjectDto(id, key, name, owner, status, progress)
+fun Project.toDto(): ProjectDto = ProjectDto(id, key, name, owner, status, progress, workspaceId)
 fun TaskItem.toDto(): TaskDto = TaskDto(id, number, projectId, title, status, priority, assignee)
 fun AgentRun.toDto(): AgentRunDto =
     AgentRunDto(id, status, provider, model, agentName, taskId, changedFiles, evidenceCount, unresolvedCount, requiresReview)
