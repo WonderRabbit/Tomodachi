@@ -14,7 +14,7 @@ export function AgentRunsPage() {
       />
       <Card title="Run history">
         <div className="table-wrap">
-          <table>
+          <table className="responsive-table">
             <thead>
               <tr>
                 <th>Run</th>
@@ -30,14 +30,14 @@ export function AgentRunsPage() {
                 const task = tasks.find((item) => item.id === run.taskId);
                 return (
                   <tr key={run.id}>
-                    <td>
+                    <td data-label="Run">
                       <Link to="/agent-runs/$runId" params={{ runId: run.id }}>{run.id}</Link>
                     </td>
-                    <td>{run.provider} · {run.model}</td>
-                    <td>{task?.number ?? "No task"}</td>
-                    <td>{run.changedFiles.length}</td>
-                    <td>{run.evidenceCount}</td>
-                    <td><Badge tone={statusTone(run.status)}>{run.status}</Badge></td>
+                    <td data-label="Agent">{run.provider} · {run.model}</td>
+                    <td data-label="Linked task">{task?.number ?? "No task"}</td>
+                    <td data-label="Changed files">{run.changedFiles.length}</td>
+                    <td data-label="Evidence">{run.evidenceCount}</td>
+                    <td data-label="Review"><Badge tone={statusTone(run.status)}>{run.status}</Badge></td>
                   </tr>
                 );
               })}

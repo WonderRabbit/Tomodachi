@@ -238,6 +238,7 @@ main,
 .metric-card,
 .detail-rail,
 .board-column {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(21, 24, 33, 0.9);
@@ -256,6 +257,11 @@ main,
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.summary-pills,
+.token-row {
+  flex-wrap: wrap;
 }
 
 .card-header {
@@ -646,10 +652,12 @@ th {
   }
 
   .topbar {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .topbar-actions {
+    grid-column: 2;
+    justify-self: end;
     min-width: 0;
     gap: 6px;
   }
@@ -661,6 +669,15 @@ th {
 
   .product-switcher {
     display: none;
+  }
+
+  .search-box {
+    display: none;
+  }
+
+  .metric-grid .card > strong + span {
+    display: block;
+    margin-top: 4px;
   }
 
   .page-header {
@@ -684,6 +701,43 @@ th {
   .review-row,
   .artifact-row {
     grid-template-columns: 1fr;
+  }
+
+  .responsive-table {
+    min-width: 0;
+  }
+
+  .responsive-table thead {
+    display: none;
+  }
+
+  .responsive-table,
+  .responsive-table tbody,
+  .responsive-table tr,
+  .responsive-table td {
+    display: block;
+  }
+
+  .responsive-table tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    border-bottom: 0;
+    padding: 6px 0;
+    overflow-wrap: anywhere;
+  }
+
+  .responsive-table td::before {
+    flex: 0 0 auto;
+    color: var(--muted);
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 600;
   }
 
   .login-screen {

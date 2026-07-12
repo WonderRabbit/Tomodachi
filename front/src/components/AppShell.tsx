@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
   Boxes,
@@ -12,7 +13,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { requestCurrentUser } from "../api/authClient";
+import { ApiClientError } from "../api/http";
 import { clearAuthSession, loadAuthSession } from "../auth/session";
 import { products } from "../mockData";
 import { useUiStore } from "../store";
@@ -40,9 +43,28 @@ export function AppShell({ children }: { children: ReactNode }) {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
   const toggleDetailRail = useUiStore((state) => state.toggleDetailRail);
   const [session, setSession] = useState(() => loadAuthSession());
+  const currentUserQuery = useQuery({
+    enabled: session !== null,
+    queryFn: ({ signal }) => requestCurrentUser(signal),
+    queryKey: ["auth", "me"],
+    retry: false,
+  });
   const primaryProduct = products[0];
   const productName = primaryProduct?.name ?? "No product";
   const productStatus: HealthStatus = primaryProduct?.status ?? "Watch";
+  const currentUser = currentUserQuery.data;
+  const sessionEmail = currentUser?.email ?? session?.email;
+  const sessionRole = currentUser?.role;
+
+  useEffect(() => {
+    const error = currentUserQuery.error;
+
+    if (error instanceof ApiClientError && error.status === 401) {
+      clearAuthSession();
+      setSession(null);
+      void navigate({ to: "/login" });
+    }
+  }, [currentUserQuery.error, navigate]);
 
   function handleSignOut() {
     clearAuthSession();
@@ -93,15 +115,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="sync-status">
               <Badge tone="success">Sync 12m ago</Badge>
             </span>
-            {session === null ? (
+            {sessionEmail === undefined ? (
               <Link to="/login" className="button">
                 Sign in
               </Link>
             ) : (
               <>
                 <span className="auth-email">
-                  <Badge tone="accent">{session.email}</Badge>
+                  <Badge tone="accent">{sessionEmail}</Badge>
                 </span>
+                {sessionRole !== undefined && <Badge tone="neutral">{sessionRole}</Badge>}
                 <button className="button" type="button" onClick={handleSignOut}>
                   Sign out
                 </button>

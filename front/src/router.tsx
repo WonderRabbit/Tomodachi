@@ -1,10 +1,12 @@
 import {
   Outlet,
+  Navigate,
   createRootRoute,
   createRoute,
   createRouter,
   useLocation,
 } from "@tanstack/react-router";
+import { loadAuthSession } from "./auth/session";
 import { AppShell } from "./components/AppShell";
 import { AgentRunDetailPage, AgentRunsPage } from "./pages/AgentRunsPage";
 import { ArchitectureDetailPage, ArchitecturePage } from "./pages/ArchitecturePage";
@@ -24,6 +26,10 @@ function RootLayout() {
 
   if (pathname === "/login") {
     return <Outlet />;
+  }
+
+  if (loadAuthSession() === null) {
+    return <Navigate to="/login" replace />;
   }
 
   return (

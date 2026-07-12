@@ -30,7 +30,7 @@ Tomodachi/
 | 작업 | 위치 | 현재 계약 |
 | --- | --- | --- |
 | Backend API와 상태 전이 | `backend/src/main/kotlin/com/tomodachi/backend` | controller, security, service, JPA domain이 소유한다. |
-| Frontend route와 상태 | `front/src`, `front/DESIGN.md` | mock query boundary와 panel fallback을 유지한다. |
+| Frontend route와 상태 | `front/src`, `front/DESIGN.md` | auth/products backend adapter와 남은 mock query boundary, panel fallback을 함께 유지한다. |
 | DB mirror | `db/init.sql` | Kotlin enum/entity 및 TypeScript union과 함께 검토한다. |
 | Local/dev/prod Compose | `deploy/docker-compose*.yml`, `deploy/validate-compose-env.sh` | 환경 template 검증 후 config를 render한다. |
 | CI/CD | `.github/workflows/*.yml` | CI, GHCR publish, dev/prod 배포, live deploy QA가 추적돼 있다. |

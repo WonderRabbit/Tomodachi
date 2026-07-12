@@ -1,7 +1,10 @@
 package com.tomodachi.backend.api
 
+import com.tomodachi.backend.domain.Product
+import com.tomodachi.backend.domain.HealthStatus
 import com.tomodachi.backend.domain.Role
 import com.tomodachi.backend.domain.TaskItem
+import com.tomodachi.backend.domain.TaskStatus
 import com.tomodachi.backend.repo.ProductRepository
 import com.tomodachi.backend.repo.ProjectRepository
 import com.tomodachi.backend.repo.TaskRepository
@@ -24,7 +27,7 @@ class LifecycleController(
     private val tasks: TaskRepository,
 ) {
     @GetMapping("/products")
-    fun products(): PageResponse<ProductDto> = products.findAll().map { it.toDto() }.toPage()
+    fun products(): PageResponse<ProductDto> = products.findAll().map { product -> summarizeProduct(product) }.toPage()
 
     @GetMapping("/projects")
     fun projects(): PageResponse<ProjectDto> = projects.findAll().map { it.toDto() }.toPage()
@@ -57,6 +60,23 @@ class LifecycleController(
             assignee = actor.email,
         )
         return tasks.save(next).toDto()
+    }
+
+    private fun summarizeProduct(product: Product): ProductDto {
+        val productProjects = projects.findByProductId(product.id)
+        val projectIds = productProjects.map { it.id }.toSet()
+        val productTasks = tasks.findAll().filter { it.projectId in projectIds }
+        val lastActivity = productTasks.maxByOrNull { it.updatedAt }?.updatedAt?.toString() ?: "No activity"
+
+        return ProductDto(
+            id = product.id,
+            code = product.code,
+            name = product.name,
+            status = product.status,
+            activeProjects = productProjects.count { it.status != HealthStatus.Blocked },
+            openTasks = productTasks.count { it.status != TaskStatus.Done },
+            lastActivity = lastActivity,
+        )
     }
 }
 

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
+  type Cell,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -65,7 +66,7 @@ export function TasksTable({ data }: { data: Task[] }) {
 
   return (
     <div className="table-wrap">
-      <table>
+      <table className="responsive-table">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -81,7 +82,7 @@ export function TasksTable({ data }: { data: Task[] }) {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
+                <td key={cell.id} data-label={cellHeaderLabel(cell)}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
@@ -91,4 +92,10 @@ export function TasksTable({ data }: { data: Task[] }) {
       </table>
     </div>
   );
+}
+
+function cellHeaderLabel(cell: Cell<Task, unknown>): string {
+  const header = cell.column.columnDef.header;
+
+  return typeof header === "string" ? header : cell.column.id;
 }

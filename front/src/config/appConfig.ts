@@ -1,5 +1,5 @@
 export type AppEnvironment = "local" | "dev" | "prod";
-export type DataSourceMode = "mock";
+export type DataSourceMode = "hybrid" | "mock";
 
 export type FrontendRuntimeEnv = {
   readonly MODE?: string;
@@ -9,7 +9,7 @@ export type FrontendRuntimeEnv = {
 
 export type AppConfig = {
   readonly apiBaseUrl: string;
-  readonly backendIntegrationEnabled: false;
+  readonly backendIntegrationEnabled: boolean;
   readonly dataSource: DataSourceMode;
   readonly environment: AppEnvironment;
 };
@@ -43,8 +43,8 @@ export function resolveAppConfig(env: FrontendRuntimeEnv): AppConfig {
 
   return {
     apiBaseUrl: parseApiBaseUrl(env.VITE_TOMODACHI_API_BASE_URL, environment),
-    backendIntegrationEnabled: false,
-    dataSource: "mock",
+    backendIntegrationEnabled: true,
+    dataSource: "hybrid",
     environment,
   };
 }

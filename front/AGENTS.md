@@ -6,13 +6,13 @@
 
 ## 현재 표면
 
-React 19, Vite 6, TypeScript 기반 운영 dashboard다. TanStack Router/Query/Table, Zustand, lucide-react를 사용한다. `src/config/appConfig.ts`가 환경 입력을 파싱하지만 `backendIntegrationEnabled`는 현재 `false`, `dataSource`는 `mock`이다.
+React 19, Vite 6, TypeScript 기반 운영 dashboard다. TanStack Router/Query/Table, Zustand, lucide-react를 사용한다. `src/config/appConfig.ts`가 환경 입력을 파싱하며 현재 `backendIntegrationEnabled`는 `true`, `dataSource`는 `hybrid`다.
 
 | 작업 | 위치 | 규칙 |
 | --- | --- | --- |
 | Route | `src/router.tsx`, `src/pages` | URL 복원 context는 Router가 소유한다. |
 | UI local state | `src/store.ts` | sidebar, detail rail, search 같은 화면 상태만 둔다. |
-| Data boundary | `src/data`, `src/mockData.ts`, `src/config` | backend 전환 acceptance 전 mock query seam을 지우지 않는다. |
+| Data boundary | `src/api`, `src/data`, `src/mockData.ts`, `src/config` | `products`와 auth는 backend adapter를 사용하고, 나머지 화면은 backend 전환 acceptance 전 mock query seam을 유지한다. |
 | Visual contract | `DESIGN.md`, `src/styles.css`, `src/components` | compact dashboard와 panel fallback을 유지한다. |
 | Runtime config | `scripts/verify-runtime-config.mjs`, `env/*.example` | local/dev/prod URL과 잘못된 환경 입력을 검증한다. |
 

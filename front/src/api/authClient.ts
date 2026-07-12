@@ -1,120 +1,68 @@
-import { appConfig } from "../config/runtimeConfig";
+import { z } from "zod";
+import { apiJson, ApiClientError } from "./http";
 
 export type LoginCredentials = {
   readonly email: string;
   readonly password: string;
 };
 
-export type LoginResponse = {
-  readonly accessToken: string;
-  readonly tokenType: "Bearer";
-};
+const loginResponseSchema = z.object({
+  accessToken: z.string().min(1),
+  tokenType: z.literal("Bearer"),
+});
 
-type ErrorResponse = {
-  readonly code: string;
-  readonly message: string;
-};
+const authRoleSchema = z.enum(["ADMIN", "PRODUCT_MANAGER", "ENGINEER", "REVIEWER", "VIEWER", "AGENT_SERVICE"]);
 
-export class AuthClientError extends Error {
-  readonly code: string;
-  readonly status: number | null;
+const currentUserSchema = z.object({
+  id: z.string().min(1),
+  email: z.string().min(1),
+  role: authRoleSchema,
+  scopes: z.array(z.string().min(1)),
+});
 
-  constructor(message: string, details: { code: string; status: number | null }) {
-    super(message);
-    this.name = "AuthClientError";
-    this.code = details.code;
-    this.status = details.status;
-  }
-}
+export type AuthClientError = ApiClientError;
+export const AuthClientError = ApiClientError;
+
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
+export type CurrentUser = z.infer<typeof currentUserSchema>;
 
 export async function requestLogin(
   credentials: LoginCredentials,
   signal?: AbortSignal,
 ): Promise<LoginResponse> {
-  const response = await fetch(`${appConfig.apiBaseUrl}/api/auth/login`, {
+  const payload = await apiJson("api/auth/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
+    json: credentials,
     signal,
   });
 
-  const payload = await readJson(response);
+  try {
+    return loginResponseSchema.parse(payload);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new AuthClientError("Login response did not match the auth contract.", {
+        code: "INVALID_AUTH_RESPONSE",
+        status: null,
+      });
+    }
 
-  if (!response.ok) {
-    throw errorFromResponse(response.status, payload);
+    throw error;
   }
-
-  return parseLoginResponse(payload);
 }
 
-async function readJson(response: Response): Promise<unknown> {
-  const body = await response.text();
-
-  if (body.trim().length === 0) {
-    return undefined;
-  }
+export async function requestCurrentUser(signal?: AbortSignal): Promise<CurrentUser> {
+  const payload = await apiJson("api/auth/me", { signal });
 
   try {
-    const parsed: unknown = JSON.parse(body);
-    return parsed;
-  } catch {
-    return undefined;
+    return currentUserSchema.parse(payload);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new AuthClientError("Current user response did not match the auth contract.", {
+        code: "INVALID_AUTH_RESPONSE",
+        status: null,
+      });
+    }
+
+    throw error;
   }
-}
-
-function parseLoginResponse(payload: unknown): LoginResponse {
-  if (!isRecord(payload)) {
-    throw new AuthClientError("Login response was not a JSON object.", {
-      code: "INVALID_AUTH_RESPONSE",
-      status: null,
-    });
-  }
-
-  const accessToken = payload["accessToken"];
-  const tokenType = payload["tokenType"];
-
-  if (typeof accessToken !== "string" || accessToken.length === 0 || tokenType !== "Bearer") {
-    throw new AuthClientError("Login response did not match the auth contract.", {
-      code: "INVALID_AUTH_RESPONSE",
-      status: null,
-    });
-  }
-
-  return { accessToken, tokenType };
-}
-
-function errorFromResponse(status: number, payload: unknown): AuthClientError {
-  const errorResponse = parseErrorResponse(payload);
-
-  if (errorResponse !== null) {
-    return new AuthClientError(errorResponse.message, { code: errorResponse.code, status });
-  }
-
-  if (status === 401) {
-    return new AuthClientError("Bad credentials", { code: "UNAUTHORIZED", status });
-  }
-
-  return new AuthClientError("Authentication request failed.", {
-    code: "AUTH_REQUEST_FAILED",
-    status,
-  });
-}
-
-function parseErrorResponse(payload: unknown): ErrorResponse | null {
-  if (!isRecord(payload)) {
-    return null;
-  }
-
-  const code = payload["code"];
-  const message = payload["message"];
-
-  if (typeof code !== "string" || code.length === 0 || typeof message !== "string" || message.length === 0) {
-    return null;
-  }
-
-  return { code, message };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

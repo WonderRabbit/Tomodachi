@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import com.tomodachi.backend.repo.AuditEventRepository
 import com.tomodachi.backend.repo.OutboxEventRepository
+import com.tomodachi.backend.repo.UserRepository
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -27,6 +29,8 @@ class BackendApiIntegrationTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val audits: AuditEventRepository,
     @Autowired private val outbox: OutboxEventRepository,
+    @Autowired private val users: UserRepository,
+    @Autowired private val passwordEncoder: PasswordEncoder,
 ) {
     @Test
     fun `login returns bearer token for seeded user`() {
@@ -50,6 +54,45 @@ class BackendApiIntegrationTest(
             .andExpect(status().isUnauthorized)
             .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
             .andExpect(jsonPath("$.message").value("Bad credentials"))
+    }
+
+    @Test
+    fun `seeded user password is stored as hash`() {
+        val user = users.findByEmail("admin@tomodachi.local")
+
+        assertThat(user).isNotNull
+        assertThat(user!!.password).isNotEqualTo("password")
+        assertThat(passwordEncoder.matches("password", user.password)).isTrue()
+    }
+
+    @Test
+    fun `auth me returns current principal and scopes`() {
+        val viewerToken = login("viewer@tomodachi.local", "password")
+
+        mockMvc.perform(get("/api/auth/me").bearer(viewerToken))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.email").value("viewer@tomodachi.local"))
+            .andExpect(jsonPath("$.role").value("VIEWER"))
+            .andExpect(jsonPath("$.scopes[0]").value("product:read"))
+    }
+
+    @Test
+    fun `auth me rejects missing token`() {
+        mockMvc.perform(get("/api/auth/me"))
+            .andExpect(status().isUnauthorized)
+            .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+    }
+
+    @Test
+    fun `products response includes frontend summary fields`() {
+        val adminToken = login("admin@tomodachi.local", "password")
+
+        mockMvc.perform(get("/api/products").bearer(adminToken))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value("product_tomodachi"))
+            .andExpect(jsonPath("$.items[0].activeProjects").value(1))
+            .andExpect(jsonPath("$.items[0].openTasks").value(3))
+            .andExpect(jsonPath("$.items[0].lastActivity").isString)
     }
 
     @Test

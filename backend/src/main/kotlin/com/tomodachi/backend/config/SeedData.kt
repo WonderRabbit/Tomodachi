@@ -4,6 +4,7 @@ import com.tomodachi.backend.domain.*
 import com.tomodachi.backend.repo.*
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 
 @Component
@@ -16,15 +17,17 @@ class SeedData(
     private val artifacts: ArtifactRepository,
     private val links: TaskArtifactLinkRepository,
     private val agentRuns: AgentRunRepository,
+    private val passwordEncoder: PasswordEncoder,
 ) : ApplicationRunner {
     override fun run(args: ApplicationArguments) {
         if (users.count() > 0) return
+        val initialPasswordHash = passwordEncoder.encode(LOCAL_SEED_PASSWORD)
         users.saveAll(
             listOf(
-                UserAccount("user_admin", "admin@tomodachi.local", "password", "Admin", Role.ADMIN),
-                UserAccount("user_engineer", "engineer@tomodachi.local", "password", "Engineer", Role.ENGINEER),
-                UserAccount("user_viewer", "viewer@tomodachi.local", "password", "Viewer", Role.VIEWER),
-                UserAccount("user_agent", "agent@tomodachi.local", "password", "Agent", Role.AGENT_SERVICE),
+                UserAccount("user_admin", "admin@tomodachi.local", initialPasswordHash, "Admin", Role.ADMIN),
+                UserAccount("user_engineer", "engineer@tomodachi.local", initialPasswordHash, "Engineer", Role.ENGINEER),
+                UserAccount("user_viewer", "viewer@tomodachi.local", initialPasswordHash, "Viewer", Role.VIEWER),
+                UserAccount("user_agent", "agent@tomodachi.local", initialPasswordHash, "Agent", Role.AGENT_SERVICE),
             ),
         )
         products.save(Product("product_tomodachi", "TMD", "Tomodachi", HealthStatus.Watch))
@@ -62,3 +65,5 @@ class SeedData(
         )
     }
 }
+
+private const val LOCAL_SEED_PASSWORD = "password"

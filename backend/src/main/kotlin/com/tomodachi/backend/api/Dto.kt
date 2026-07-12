@@ -5,10 +5,12 @@ import com.tomodachi.backend.domain.ArtifactStatus
 import com.tomodachi.backend.domain.ArtifactType
 import com.tomodachi.backend.domain.HealthStatus
 import com.tomodachi.backend.domain.Priority
+import com.tomodachi.backend.domain.Role
 import com.tomodachi.backend.domain.TaskStatus
 
 data class LoginRequest(val email: String, val password: String)
 data class AuthResponse(val accessToken: String, val tokenType: String = "Bearer")
+data class AuthMeResponse(val id: String, val email: String, val role: Role, val scopes: List<String>)
 data class ErrorResponse(val code: String, val message: String)
 
 data class PageResponse<T>(val items: List<T>, val total: Int)
@@ -16,7 +18,15 @@ data class CreateTaskRequest(val projectId: String, val title: String, val prior
 data class TransitionRequest(val toStatus: TaskStatus, val reason: String)
 data class TransitionResponse(val task: TaskDto, val outboxEventCount: Long)
 
-data class ProductDto(val id: String, val code: String, val name: String, val status: HealthStatus)
+data class ProductDto(
+    val id: String,
+    val code: String,
+    val name: String,
+    val status: HealthStatus,
+    val activeProjects: Int = 0,
+    val openTasks: Int = 0,
+    val lastActivity: String = "No activity",
+)
 data class ProjectDto(
     val id: String,
     val key: String,

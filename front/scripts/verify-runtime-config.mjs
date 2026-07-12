@@ -42,8 +42,8 @@ function setProcessEnv(name, value) {
 function assertConfig(actual, expected) {
   assert.deepEqual(actual, {
     apiBaseUrl: expected.apiBaseUrl,
-    backendIntegrationEnabled: false,
-    dataSource: "mock",
+    backendIntegrationEnabled: true,
+    dataSource: "hybrid",
     environment: expected.environment,
   });
 }

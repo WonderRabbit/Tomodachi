@@ -2,12 +2,15 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const baseUrl = process.env.TOMODACHI_FRONT_URL ?? "http://127.0.0.1:5173";
+const apiBaseUrl =
+  process.env.TOMODACHI_API_BASE_URL ?? "http://127.0.0.1:8080";
 const evidenceDir =
   process.env.TOMODACHI_FRONT_QA_DIR ?? "/private/tmp/tomodachi-front-qa";
 
 const routes = [
   ["/login", "Sign in to Tomodachi"],
   ["/", "Tomodachi operations"],
+  ["/products", "Products"],
   ["/projects", "Projects"],
   ["/projects/project_alpha", "Lifecycle dashboard alpha"],
   ["/projects/project_alpha/tasks/board", "Task board"],
@@ -31,6 +34,7 @@ const page = await browser.newPage({
 const checks = [];
 const captures = [];
 const authenticatedChecks = [];
+const authSession = await loginForQa();
 
 for (const viewport of [
   { name: "desktop", width: 1440, height: 980 },
@@ -40,6 +44,12 @@ for (const viewport of [
 
   for (const [route, expected] of routes) {
     const screenshotPath = `${evidenceDir}/${routeSlug(route)}-${viewport.name}.png`;
+
+    if (route === "/login") {
+      await clearAuthSession();
+    } else {
+      await setAuthSession(authSession);
+    }
 
     await page.goto(`${baseUrl}${route}`, { waitUntil: "networkidle" });
     await page.screenshot({ path: screenshotPath, fullPage: true });
@@ -51,10 +61,18 @@ for (const viewport of [
     });
 
     const bodyText = await page.locator("body").innerText();
+    const metrics = await page.evaluate(() => ({
+      innerWidth: window.innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+
     checks.push({
       route,
       viewport: viewport.name,
       expected,
+      fitsViewport: metrics.scrollWidth <= metrics.innerWidth,
+      innerWidth: metrics.innerWidth,
+      scrollWidth: metrics.scrollWidth,
       visible: bodyText.includes(expected),
       textLength: bodyText.length,
     });
@@ -62,6 +80,7 @@ for (const viewport of [
 }
 
 async function captureLegacyDashboardScreenshots() {
+  await setAuthSession(authSession);
   await page.setViewportSize({ width: 1440, height: 980 });
   await page.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
   await page.screenshot({
@@ -82,7 +101,7 @@ await captureAuthenticatedShellScreenshots();
 
 await browser.close();
 
-const failed = checks.filter((check) => !check.visible);
+const failed = checks.filter((check) => !check.visible || !check.fitsViewport);
 const failedAuthenticated = authenticatedChecks.filter((check) => !check.ok);
 const result = {
   ok: failed.length === 0 && failedAuthenticated.length === 0,
@@ -115,18 +134,7 @@ function routeSlug(route) {
 }
 
 async function captureAuthenticatedShellScreenshots() {
-  await page.goto(`${baseUrl}/login`, { waitUntil: "networkidle" });
-  await page.evaluate(() => {
-    window.localStorage.setItem(
-      "tomodachi.auth.session.v1",
-      JSON.stringify({
-        accessToken: "test-token-visual-qa",
-        createdAt: new Date().toISOString(),
-        email: "admin@tomodachi.local",
-        tokenType: "Bearer",
-      }),
-    );
-  });
+  await setAuthSession(authSession);
 
   for (const viewport of [
     { name: "authenticated-desktop", width: 1440, height: 980 },
@@ -158,5 +166,43 @@ async function captureAuthenticatedShellScreenshots() {
     });
   }
 
+  await page.evaluate(() => window.localStorage.removeItem("tomodachi.auth.session.v1"));
+}
+
+async function loginForQa() {
+  const response = await page.request.post(`${apiBaseUrl}/api/auth/login`, {
+    data: {
+      email: "admin@tomodachi.local",
+      password: "password",
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`visual QA login failed: HTTP ${response.status()}`);
+  }
+
+  const payload = await response.json();
+
+  if (typeof payload.accessToken !== "string" || payload.tokenType !== "Bearer") {
+    throw new Error("visual QA login response did not match auth contract");
+  }
+
+  return {
+    accessToken: payload.accessToken,
+    createdAt: new Date().toISOString(),
+    email: "admin@tomodachi.local",
+    tokenType: "Bearer",
+  };
+}
+
+async function setAuthSession(session) {
+  await page.goto(`${baseUrl}/login`, { waitUntil: "networkidle" });
+  await page.evaluate((nextSession) => {
+    window.localStorage.setItem("tomodachi.auth.session.v1", JSON.stringify(nextSession));
+  }, session);
+}
+
+async function clearAuthSession() {
+  await page.goto(`${baseUrl}/login`, { waitUntil: "networkidle" });
   await page.evaluate(() => window.localStorage.removeItem("tomodachi.auth.session.v1"));
 }
