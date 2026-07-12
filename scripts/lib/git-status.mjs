@@ -18,6 +18,19 @@ function runGit(repo, args) {
   return result.stdout;
 }
 
+function runGitStatus(repo, args) {
+  const result = spawnSync("git", args, {
+    cwd: repo,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+    shell: false,
+  });
+  if (result.error) {
+    throw new ContractError(`git invocation failed: ${result.error.message}`);
+  }
+  return result;
+}
+
 function normalizeGitPath(value, label) {
   if (value.includes("\\")) {
     throw new ContractError(`${label} contains literal backslash: ${value}`);
@@ -68,4 +81,14 @@ export function readGitStatus(repo) {
 
 export function readHead(repo) {
   return runGit(repo, ["rev-parse", "HEAD"]).trim();
+}
+
+export function assertAncestorOfHead(repo, commit, label) {
+  const result = runGitStatus(repo, ["merge-base", "--is-ancestor", commit, "HEAD"]);
+  if (result.status === 0) return;
+  if (result.status === 1) {
+    throw new ContractError(`${label} is not an ancestor of HEAD: ${commit}`);
+  }
+  const diagnostic = result.stderr.trim() || `exit ${result.status}`;
+  throw new ContractError(`git merge-base failed: ${diagnostic}`);
 }

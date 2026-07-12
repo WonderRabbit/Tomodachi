@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { lstat, readdir } from "node:fs/promises";
 import path from "node:path";
-import { parseStatusFixture, readGitStatus, readHead } from "./lib/git-status.mjs";
+import { assertAncestorOfHead, parseStatusFixture, readGitStatus, readHead } from "./lib/git-status.mjs";
 import {
   assertObject,
   assertStringArray,
@@ -221,7 +221,7 @@ await runCli("validate-scope", async () => {
     if (!allowlist.paths.has(repoPath)) throw new ContractError(`mutable .omo path is not allowlisted: ${repoPath}`);
   }
   const head = readHead(options.repo);
-  if (head !== baseline.head) throw new ContractError(`HEAD mismatch: expected ${baseline.head}, found ${head}`);
+  assertAncestorOfHead(options.repo, baseline.head, "baseline head");
   await verifyHashes(options.repo, baseline.untrackedInputs, "pre-existing input");
   await verifyHashes(options.repo, baseline.protectedAgents, "protected AGENTS.md");
   if (options.agentsAuthorization !== undefined) {

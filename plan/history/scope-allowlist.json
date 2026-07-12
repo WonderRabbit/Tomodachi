@@ -30,6 +30,7 @@
     "research/opencode-small-model-helper-cli/FRESHNESS.md",
     "research/opencode-small-model-helper-cli/README.md",
     "scripts/lib/git-status.mjs",
+    "scripts/lib/remote-claims-contract.mjs",
     "scripts/lib/validator-runtime.mjs",
     "scripts/fixtures/guidance/stale-workflow-claim.md",
     "scripts/validate-history-index.mjs",

@@ -129,6 +129,7 @@
       "scripts/fixtures/scope/prompt-like-inert.txt",
       "scripts/fixtures/ui-plan/missing-api-status.md",
       "scripts/lib/git-status.mjs",
+      "scripts/lib/remote-claims-contract.mjs",
       "scripts/lib/validator-runtime.mjs",
       "scripts/validate-agents-authorization.mjs",
       "scripts/validate-evidence-precedence.mjs",

@@ -95,6 +95,17 @@ function gitLines(repoRoot, args) {
   }
 }
 
+function assertAncestorOfHead(repoRoot, commit, label) {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", commit, "HEAD"], { cwd: repoRoot, encoding: "utf8" });
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new ContractError(`${label} is not an ancestor of HEAD: ${commit}`);
+    }
+    throw error;
+  }
+}
+
 function parseInventory(value) {
   const inventory = assertObject(value, "inventory");
   if (inventory.schemaVersion !== 1 || typeof inventory.head !== "string") {
@@ -157,10 +168,7 @@ function assertSameFiles(label, expected, actual) {
 }
 
 async function validateInventory(repoRoot, inventory) {
-  const currentHead = gitLines(repoRoot, ["rev-parse", "HEAD"])[0];
-  if (currentHead !== inventory.head) {
-    throw new ContractError(`inventory head is stale: ${inventory.head}; current=${currentHead}`);
-  }
+  assertAncestorOfHead(repoRoot, inventory.head, "inventory head");
   for (const [label, prefix] of [
     ["workflows", ".github/workflows"],
     ["deploy", "deploy"],
