@@ -73,6 +73,37 @@ export interface TaskSummary {
   assignee: string;
 }
 
+export interface ArtifactSummary {
+  id: string;
+  type: ArtifactType;
+  title: string;
+  status: ArtifactStatus;
+  sourcePath: string;
+  linkedTaskIds: string[];
+}
+
+export interface AgentRunSummary {
+  id: string;
+  status: AgentRunStatus;
+  provider: string;
+  model: string;
+  agentName: string;
+  taskId: string;
+  changedFiles: string[];
+  evidenceCount: number;
+  unresolvedCount: number;
+  requiresReview: boolean;
+}
+
+export interface TaskContext {
+  task: TaskSummary;
+  project: ProjectSummary;
+  statusMachine: Record<TaskStatus, TaskStatus[]>;
+  artifacts: ArtifactSummary[];
+  agentRuns: AgentRunSummary[];
+  rules: string[];
+}
+
 export interface ArchitectureArtifact {
   id: string;
   type: ArtifactType;
