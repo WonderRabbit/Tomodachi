@@ -18,4 +18,4 @@ fun AgentRun.toDto(): AgentRunDto =
     AgentRunDto(id, status, provider, model, agentName, taskId, changedFiles, evidenceCount, unresolvedCount, requiresReview)
 
 fun ArchitectureArtifact.toDto(linkedTaskIds: List<String>): ArtifactDto =
-    ArtifactDto(id, type, title, status, sourcePath, linkedTaskIds)
+    ArtifactDto(id, type, title, status, sourcePath, owner, summary, linkedTaskIds)

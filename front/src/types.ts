@@ -154,7 +154,7 @@ export interface ArchitectureArtifact {
   sourcePath: string;
   linkedTaskIds: string[];
   owner: string;
-  updated: string;
+  updated?: string;
   summary: string;
 }
 

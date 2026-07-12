@@ -52,6 +52,8 @@ data class ArtifactDto(
     val title: String,
     val status: ArtifactStatus,
     val sourcePath: String,
+    val owner: String,
+    val summary: String,
     val linkedTaskIds: List<String>,
 )
 
