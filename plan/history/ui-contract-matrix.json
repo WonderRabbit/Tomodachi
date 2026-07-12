@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "pinnedAt": "2026-07-12T20:55:25+09:00",
+  "pinnedAt": "2026-07-12T23:12:00+09:00",
   "plan": {
     "path": "plan/ui-ux-mvp-flow.md",
-    "sha256": "2077353aeef8368ea07199264aaa8bc572503fb26e58cd3d4401e8eb853582c3",
-    "sourceCommit": "4613868b7b2c9d07a02e024bf1cbb2a0968dd4db"
+    "sha256": "aa8bb548c6e77c52f0fa2be209999a67b9dc780c8be56d7851fba852471a7cc9",
+    "sourceCommit": "d653cc63c0bac2b1f54f9146288a6108c2657654"
   },
   "routeSource": {
     "path": "front/src/router.tsx",
-    "sha256": "fe1dfa8e350e301cf1dbd4dcfabbee530ca030ce466e507c0a0d3945ae45e332"
+    "sha256": "eb295bef4c8ace035522327d6b346465f2f5834c1354a17e0f504521b063bf15"
   },
   "controllerSources": [
     {
       "path": "backend/src/main/kotlin/com/tomodachi/backend/api/AgentController.kt",
-      "sha256": "7dc7ffdc0a9d0b1afaeebd03dea7a33fd8c100aee4fcf69f6b8d6d962d236fee"
+      "sha256": "c299c27e5bb9f2523fea8124db5421bc6c3d8f35fd859b6cd11f8876e36bf2cf"
     },
     {
       "path": "backend/src/main/kotlin/com/tomodachi/backend/api/ArchitectureController.kt",
@@ -24,37 +24,201 @@
       "sha256": "a98ccbefb37a8fef348a8efdf5418ec2ef1f707aae9e8b01aad90edaad247ff2"
     },
     {
+      "path": "backend/src/main/kotlin/com/tomodachi/backend/api/DashboardController.kt",
+      "sha256": "4e33283a4401ddaeff8d8f9922a91c725790560b977dbfd4195c9309ba4f44be"
+    },
+    {
+      "path": "backend/src/main/kotlin/com/tomodachi/backend/api/IntegrationController.kt",
+      "sha256": "d77a43adc6501ac3a153ac55c51b01b22f09b073326834f1c64875c8c539d9ef"
+    },
+    {
       "path": "backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt",
-      "sha256": "a0313036b2a8e014e5cb1eb0b7781ed6942577db7f423f4c53799f1553847f32"
+      "sha256": "685a0c3e90ae59f805a99aff06a363734e3bd32aead3992c41fe614e892c414a"
+    },
+    {
+      "path": "backend/src/main/kotlin/com/tomodachi/backend/api/SearchController.kt",
+      "sha256": "aaf9e70e4cad09b0766cd61cbe1eec690c8cbf622bd3371d8cec8446797371a0"
     },
     {
       "path": "backend/src/main/kotlin/com/tomodachi/backend/api/TaskController.kt",
       "sha256": "4e12ea9cfd30602d152606a4f6422b984d3a822809cec26d03a6daaab5fc9cda"
+    },
+    {
+      "path": "backend/src/main/kotlin/com/tomodachi/backend/api/WorkspaceController.kt",
+      "sha256": "0104c973b4920783a98bdad90ce7d5e8dba97cd70e29e072b7e87ff6918b2fea"
     }
   ],
   "routes": [
-    { "route": "/", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "router current-route set equals matrix current-route set" },
-    { "route": "/products", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "products route uses backend adapter with loading error forbidden fallbacks" },
-    { "route": "/projects", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "projects route is present in the router tree" },
-    { "route": "/projects/$projectId", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "project detail route accepts projectId" },
-    { "route": "/projects/$projectId/tasks/board", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "project board route is present in the router tree" },
-    { "route": "/tasks", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "tasks route is present in the router tree" },
-    { "route": "/tasks/$taskId", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "task detail route accepts taskId" },
-    { "route": "/architecture", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "architecture route is present in the router tree" },
-    { "route": "/architecture/adr/$artifactId", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "architecture detail route accepts artifactId" },
-    { "route": "/agent-runs", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "agent runs route is present in the router tree" },
-    { "route": "/agent-runs/$runId", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "agent run detail route accepts runId" },
-    { "route": "/settings", "status": "current", "owner": "frontend", "sourcePath": "front/src/router.tsx", "acceptanceTest": "settings route is present in the router tree" },
-    { "route": "/login", "status": "current", "owner": "frontend-auth", "sourcePath": "front/src/router.tsx", "acceptanceTest": "login route is present and auth response adapter handles success and unauthorized responses" },
-    { "route": "/products/$productId", "status": "planned", "owner": "frontend-lifecycle", "sourcePath": "front/src/router.tsx", "acceptanceTest": "add product detail route together with product detail API contract" },
-    { "route": "/workspaces/$workspaceId", "status": "planned", "owner": "frontend-lifecycle", "sourcePath": "front/src/router.tsx", "acceptanceTest": "approve workspace DTO and navigation contract before adding the route" }
+    {
+      "route": "/",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "router current-route set equals matrix current-route set"
+    },
+    {
+      "route": "/agent-runs",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "agent runs route is present in the router tree"
+    },
+    {
+      "route": "/agent-runs/$runId",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "agent run detail route accepts runId"
+    },
+    {
+      "route": "/architecture",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "architecture route is present in the router tree"
+    },
+    {
+      "route": "/architecture/adr/$artifactId",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "architecture detail route accepts artifactId"
+    },
+    {
+      "route": "/login",
+      "status": "current",
+      "owner": "frontend-auth",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "login route is present and auth response adapter handles success and unauthorized responses"
+    },
+    {
+      "route": "/products",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "products route uses backend adapter with loading error forbidden fallbacks"
+    },
+    {
+      "route": "/products/$productId",
+      "status": "current",
+      "owner": "frontend-lifecycle",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "product detail route uses backend product detail adapter and missing-product fallback"
+    },
+    {
+      "route": "/projects",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "projects route is present in the router tree"
+    },
+    {
+      "route": "/projects/$projectId",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "project detail route accepts projectId"
+    },
+    {
+      "route": "/projects/$projectId/tasks/board",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "project board route is present in the router tree"
+    },
+    {
+      "route": "/settings",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "settings route is present in the router tree"
+    },
+    {
+      "route": "/tasks",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "tasks route is present in the router tree"
+    },
+    {
+      "route": "/tasks/$taskId",
+      "status": "current",
+      "owner": "frontend",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "task detail route accepts taskId"
+    },
+    {
+      "route": "/workspaces/$workspaceId",
+      "status": "current",
+      "owner": "frontend-lifecycle",
+      "sourcePath": "front/src/router.tsx",
+      "acceptanceTest": "workspace detail route uses backend workspace adapter and missing-workspace fallback"
+    }
   ],
   "apiClaims": [
-    { "method": "GET", "path": "/api/products", "status": "current", "owner": "backend-lifecycle", "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt", "acceptanceTest": "source parser confirms the current mapping; MockMvc covers PageResponse<ProductDto> summary fields" },
-    { "method": "POST", "path": "/api/auth/login", "status": "current", "owner": "backend-auth", "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt", "acceptanceTest": "source parser confirms the current mapping; MockMvc covers bearer token success and unauthorized bad credentials" },
-    { "method": "GET", "path": "/api/auth/me", "status": "current", "owner": "backend-auth", "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt", "acceptanceTest": "MockMvc verifies principal id email role scopes and unauthorized behavior" },
-    { "method": "GET", "path": "/api/search", "status": "planned", "owner": "backend-search", "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/SearchController.kt", "acceptanceTest": "MockMvc verifies typed search union and permission filtering" },
-    { "method": "GET", "path": "/api/products/{productId}", "status": "planned", "owner": "backend-lifecycle", "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt", "acceptanceTest": "MockMvc verifies product detail 200 and missing product 404" },
-    { "method": "GET", "path": "/api/integrations/opencode/sync-summary", "status": "planned", "owner": "backend-integration", "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/IntegrationController.kt", "acceptanceTest": "MockMvc verifies last sync failed webhook count stale and error states" }
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": "current",
+      "owner": "backend-auth",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt",
+      "acceptanceTest": "MockMvc verifies principal id email role scopes and unauthorized behavior"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": "current",
+      "owner": "backend-auth",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt",
+      "acceptanceTest": "source parser confirms the current mapping; MockMvc covers bearer token success and unauthorized bad credentials"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/summary",
+      "status": "current",
+      "owner": "backend-dashboard",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/DashboardController.kt",
+      "acceptanceTest": "MockMvc verifies aggregate dashboard summary and frontend adapter parses the response"
+    },
+    {
+      "method": "GET",
+      "path": "/api/integrations/opencode/sync-summary",
+      "status": "current",
+      "owner": "backend-integration",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/IntegrationController.kt",
+      "acceptanceTest": "MockMvc verifies sync summary fields and frontend adapter handles stale/error states"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products",
+      "status": "current",
+      "owner": "backend-lifecycle",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt",
+      "acceptanceTest": "source parser confirms the current mapping; MockMvc covers PageResponse<ProductDto> summary fields"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products/{productId}",
+      "status": "current",
+      "owner": "backend-lifecycle",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt",
+      "acceptanceTest": "MockMvc verifies product detail 200 and missing product 404"
+    },
+    {
+      "method": "GET",
+      "path": "/api/search",
+      "status": "current",
+      "owner": "backend-search",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/SearchController.kt",
+      "acceptanceTest": "MockMvc verifies typed search union and permission filtering"
+    },
+    {
+      "method": "GET",
+      "path": "/api/workspaces/{workspaceId}",
+      "status": "current",
+      "owner": "backend-workspace",
+      "sourcePath": "backend/src/main/kotlin/com/tomodachi/backend/api/WorkspaceController.kt",
+      "acceptanceTest": "MockMvc verifies workspace detail 200 and missing workspace 404"
+    }
   ]
 }

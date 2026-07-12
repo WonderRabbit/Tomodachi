@@ -6,7 +6,7 @@
 
 ## 목적
 
-이 문서는 Tomodachi MVP에서 사용자가 처음 보게 되는 main UI, 화면별 노출 데이터, 이동 흐름, 상태 처리, 연결 페이지를 정의한다. 현재 구현은 auth와 products만 backend adapter를 사용하는 hybrid 운영 UI이며, 나머지 화면은 mock query boundary를 유지한다. 아래에서 `Current`는 현재 source에 존재하는 계약, `Planned`는 구현 전 인수 테스트가 필요한 계약을 뜻한다. 상세 UX 절은 목표 화면을 보존하되, 구현 여부는 이 구분과 machine-readable matrix를 우선한다.
+이 문서는 Tomodachi MVP에서 사용자가 처음 보게 되는 main UI, 화면별 노출 데이터, 이동 흐름, 상태 처리, 연결 페이지를 정의한다. 현재 구현은 auth, dashboard, lifecycle, search, architecture, agent run, workspace 일부가 backend adapter를 사용하는 hybrid 운영 UI이며, 아직 전환되지 않은 화면은 mock query boundary를 유지한다. 아래에서 `Current`는 현재 source에 존재하는 계약, `Planned`는 구현 전 인수 테스트가 필요한 계약을 뜻한다. 상세 UX 절은 목표 화면을 보존하되, 구현 여부는 이 구분과 machine-readable matrix를 우선한다.
 
 ## 근거
 
@@ -19,15 +19,17 @@
 
 ## 현재 MVP 계약
 
-현재 UI route는 `front/src/router.tsx`에 선언된 13개 route다. `/login`, AppShell user state, `/products`는 backend API를 사용하며, 나머지 화면 데이터는 frontend mock query boundary가 소유한다. backend controller가 존재하더라도 해당 route의 frontend production data source로 연결됐다는 뜻은 아니다.
+현재 UI route는 `front/src/router.tsx`에 선언된 15개 route다. `/login`, AppShell user state, dashboard, products/product detail, search-backed shell, architecture, agent runs, workspace detail은 backend API를 사용한다. backend controller가 존재하더라도 해당 route의 frontend production data source로 연결됐다는 뜻은 아니므로, adapter 전환 여부는 각 화면의 contract test와 matrix를 우선한다.
 
 | 상태 | Route | Owner | Source | 인수 테스트 |
 | --- | --- | --- | --- | --- |
 | Current | `/` | Frontend | `front/src/router.tsx` | router parser가 route를 찾고 matrix의 Current 집합과 정확히 일치한다. |
 | Current | `/products` | Frontend | `front/src/router.tsx` | 제품 목록 화면이 backend products adapter와 loading/error/forbidden panel fallback으로 렌더링된다. |
+| Current | `/products/$productId` | Frontend/Lifecycle | `front/src/router.tsx` | 제품 상세 route가 backend product detail adapter와 404 fallback으로 렌더링된다. |
 | Current | `/projects` | Frontend | `front/src/router.tsx` | 프로젝트 목록 route가 build/typecheck를 통과한다. |
 | Current | `/projects/$projectId` | Frontend | `front/src/router.tsx` | project id route parameter로 상세 화면을 연다. |
 | Current | `/projects/$projectId/tasks/board` | Frontend | `front/src/router.tsx` | project board route가 현재 router tree에 포함된다. |
+| Current | `/workspaces/$workspaceId` | Frontend/Lifecycle | `front/src/router.tsx` | workspace detail route가 backend workspace adapter와 404 fallback으로 렌더링된다. |
 | Current | `/tasks` | Frontend | `front/src/router.tsx` | task 목록 route가 현재 router tree에 포함된다. |
 | Current | `/tasks/$taskId` | Frontend | `front/src/router.tsx` | task id route parameter로 상세 화면을 연다. |
 | Current | `/architecture` | Frontend | `front/src/router.tsx` | architecture 목록 route가 현재 router tree에 포함된다. |
@@ -37,11 +39,16 @@
 | Current | `/settings` | Frontend | `front/src/router.tsx` | settings route가 현재 router tree에 포함된다. |
 | Current | `/login` | Frontend/Auth | `front/src/router.tsx` | auth login 응답 adapter가 `POST /api/auth/login` 성공/401 계약과 함께 동작한다. |
 
-현재 backend에서 이 문서가 이름으로 참조하는 API는 다음 셋이다. 이는 endpoint 구현 상태와 frontend adapter 연동 상태를 구분해 검증한다.
+현재 backend에서 이 문서가 이름으로 참조하고 matrix로 pinning하는 대표 API는 다음과 같다. 이는 endpoint 구현 상태와 frontend adapter 연동 상태를 구분해 검증한다.
 
 | 상태 | API claim | Owner | Source | 인수 테스트 |
 | --- | --- | --- | --- | --- |
 | Current | `GET /api/products` | Backend lifecycle | `backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt` | validator가 controller mapping/source를 확인하고, summary response shape MockMvc test와 frontend adapter parse가 통과한다. |
+| Current | `GET /api/products/{productId}` | Backend lifecycle | `backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt` | 존재/미존재 product에 대한 200/404 MockMvc contract가 통과한다. |
+| Current | `GET /api/dashboard/summary` | Backend dashboard | `backend/src/main/kotlin/com/tomodachi/backend/api/DashboardController.kt` | dashboard summary adapter와 MockMvc aggregate contract가 통과한다. |
+| Current | `GET /api/search` | Backend search | `backend/src/main/kotlin/com/tomodachi/backend/api/SearchController.kt` | typed search union response contract와 permission-filter MockMvc test가 통과한다. |
+| Current | `GET /api/workspaces/{workspaceId}` | Backend workspace | `backend/src/main/kotlin/com/tomodachi/backend/api/WorkspaceController.kt` | workspace detail 200/404/401 contract와 frontend workspace route visual QA가 통과한다. |
+| Current | `GET /api/integrations/opencode/sync-summary` | Backend integration | `backend/src/main/kotlin/com/tomodachi/backend/api/IntegrationController.kt` | last sync와 failed webhook count DTO, stale/error state contract test가 통과한다. |
 | Current | `POST /api/auth/login` | Backend auth | `backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt` | validator가 controller mapping/source를 확인하고, 성공 bearer token과 401 bad credentials MockMvc test가 계약을 고정한다. |
 | Current | `GET /api/auth/me` | Backend auth | `backend/src/main/kotlin/com/tomodachi/backend/api/AuthController.kt` | authenticated principal의 id/email/role/scopes DTO와 401 behavior MockMvc test가 통과한다. |
 
@@ -51,13 +58,10 @@
 
 | 상태 | Route/API claim | Owner | Source target | 구현 전 인수 테스트 |
 | --- | --- | --- | --- | --- |
-| Planned | `/products/$productId` | Frontend/Lifecycle | `front/src/router.tsx` | product detail route와 product-detail MockMvc contract가 함께 통과한다. |
-| Planned | `/workspaces/$workspaceId` | Frontend/Lifecycle | future route module | workspace detail route/API의 DTO와 navigation contract test가 먼저 승인된다. |
-| Planned | `GET /api/search` | Backend search | future `SearchController.kt` | task/project/artifact/agent-run union response contract와 permission-filter MockMvc test가 통과한다. |
-| Planned | `GET /api/products/{productId}` | Backend lifecycle | `backend/src/main/kotlin/com/tomodachi/backend/api/LifecycleController.kt` | 존재/미존재 product에 대한 200/404 MockMvc contract가 통과한다. |
-| Planned | `GET /api/integrations/opencode/sync-summary` | Backend integration | future `IntegrationController.kt` | last sync와 failed webhook count DTO, stale/error state contract test가 통과한다. |
+| Planned | advanced release timeline route | Frontend/Lifecycle | future route module | release milestone API와 route search contract가 먼저 승인된다. |
+| Planned | advanced graph visualization route | Frontend/Architecture | future route module | architecture/task graph DTO와 large graph fallback이 먼저 승인된다. |
 
-연동 전환 gate는 adapter/fixture contract, panel 단위 loading/error/forbidden fallback, frontend typecheck/build, backend MockMvc contract, visual QA, rollback 확인이 모두 통과하는 것이다. 현재 auth와 products는 gate를 통과해 `dataSource: "hybrid"`로 전환됐고, 나머지 화면은 mock boundary를 유지한다.
+연동 전환 gate는 adapter/fixture contract, panel 단위 loading/error/forbidden fallback, frontend typecheck/build, backend MockMvc contract, visual QA, rollback 확인이 모두 통과하는 것이다. 현재 auth, dashboard, products/product detail, search, architecture, agent runs, integrations summary, workspace detail은 gate를 통과해 `dataSource: "hybrid"` 범위에 포함됐고, 아직 전환되지 않은 화면은 mock boundary를 유지한다.
 
 ## UI 방향
 

@@ -1,0 +1,132 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  local-gates:
+    name: Local gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: front
+
+      - name: Run local gates
+        run: scripts/verify-local-gates.sh
+
+  schema-parity:
+    name: PostgreSQL schema parity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Pull pinned PostgreSQL image for offline verifier
+        run: docker pull postgres:16-alpine
+
+      - name: Run schema parity
+        run: scripts/verify-schema-parity.sh --fixture scripts/fixtures/schema-parity/expected.json
+
+  authenticated-visual-smoke:
+    name: Authenticated visual smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: front
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: front
+
+      - name: Start backend
+        run: |
+          cd backend
+          ./gradlew bootRun > "$RUNNER_TEMP/tomodachi-backend.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/tomodachi-backend.pid"
+
+      - name: Wait for backend
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/tomodachi-backend.log"
+          exit 1
+
+      - name: Start frontend
+        run: |
+          cd front
+          npm run dev -- --host 127.0.0.1 > "$RUNNER_TEMP/tomodachi-front.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/tomodachi-front.pid"
+
+      - name: Wait for frontend
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5173/login >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/tomodachi-front.log"
+          exit 1
+
+      - name: Run authenticated visual QA
+        run: scripts/verify-local-gates.sh --include-visual
+        env:
+          TOMODACHI_FRONT_QA_DIR: ${{ runner.temp }}/tomodachi-front-qa
+
+      - name: Upload visual QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tomodachi-front-qa
+          path: ${{ runner.temp }}/tomodachi-front-qa
+          if-no-files-found: ignore
