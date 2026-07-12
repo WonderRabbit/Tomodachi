@@ -121,6 +121,7 @@ class OutboxEvent(
     @Id var id: String = "",
     var aggregateId: String = "",
     var type: String = "",
+    @Column(length = 4000)
     var payload: String = "",
     var createdAt: Instant = Instant.now(),
 )

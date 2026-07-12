@@ -42,7 +42,9 @@ interface TaskTransitionRepository : JpaRepository<TaskTransition, String> {
     fun findByIdempotencyKey(idempotencyKey: String): TaskTransition?
 }
 
-interface AuditEventRepository : JpaRepository<AuditEvent, String>
+interface AuditEventRepository : JpaRepository<AuditEvent, String> {
+    fun findByActionAndDetail(action: String, detail: String): AuditEvent?
+}
 interface OutboxEventRepository : JpaRepository<OutboxEvent, String> {
     fun countByAggregateId(aggregateId: String): Long
 }

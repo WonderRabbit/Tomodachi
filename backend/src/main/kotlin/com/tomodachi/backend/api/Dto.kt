@@ -7,6 +7,7 @@ import com.tomodachi.backend.domain.HealthStatus
 import com.tomodachi.backend.domain.Priority
 import com.tomodachi.backend.domain.Role
 import com.tomodachi.backend.domain.TaskStatus
+import com.fasterxml.jackson.databind.JsonNode
 
 data class LoginRequest(val email: String, val password: String)
 data class AuthResponse(val accessToken: String, val tokenType: String = "Bearer")
@@ -80,9 +81,11 @@ data class TaskContextResponse(
     val rules: List<String>,
 )
 
-data class McpInvokeRequest(val name: String, val arguments: Map<String, String>)
+data class McpInvokeRequest(val name: String, val arguments: JsonNode)
 data class McpTool(val name: String, val description: String)
 data class McpToolsResponse(val tools: List<McpTool>)
+data class McpAcceptedEventResponse(val eventId: String, val outboxEventCount: Long)
+data class McpAttachEvidenceResponse(val evidenceIds: List<String>, val evidenceCount: Int)
 
 data class SearchResultDto(
     val type: String,

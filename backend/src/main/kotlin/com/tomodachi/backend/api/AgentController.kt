@@ -1,9 +1,14 @@
 package com.tomodachi.backend.api
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.tomodachi.backend.domain.AuditEvent
+import com.tomodachi.backend.domain.OutboxEvent
 import com.tomodachi.backend.domain.Role
 import com.tomodachi.backend.domain.TaskStatus
 import com.tomodachi.backend.repo.AgentRunRepository
 import com.tomodachi.backend.repo.ArtifactRepository
+import com.tomodachi.backend.repo.AuditEventRepository
+import com.tomodachi.backend.repo.OutboxEventRepository
 import com.tomodachi.backend.repo.ProjectRepository
 import com.tomodachi.backend.repo.TaskArtifactLinkRepository
 import com.tomodachi.backend.repo.TaskRepository
@@ -29,6 +34,8 @@ class AgentController(
     private val links: TaskArtifactLinkRepository,
     private val runs: AgentRunRepository,
     private val transitions: TaskTransitionService,
+    private val auditEvents: AuditEventRepository,
+    private val outboxEvents: OutboxEventRepository,
 ) {
     @GetMapping("/agent-runs")
     fun agentRuns(): PageResponse<AgentRunDto> = runs.findAll().map { it.toDto() }.let { PageResponse(it, it.size) }
@@ -66,7 +73,9 @@ class AgentController(
     fun tools(): McpToolsResponse = McpToolsResponse(
         listOf(
             McpTool("tomodachi.get_task_context", "Return compact backend-owned task context."),
+            McpTool("tomodachi.record_agent_event", "Record a protocol envelope as audit and outbox events."),
             McpTool("tomodachi.transition_task", "Transition a task through the backend state machine."),
+            McpTool("tomodachi.attach_evidence", "Attach normalized evidence metadata to an agent run."),
         ),
     )
 
@@ -79,26 +88,102 @@ class AgentController(
             throw ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Only agent service can invoke MCP tools")
         }
         if (request.name == "tomodachi.get_task_context") {
-            return taskContext(request.arguments.required("taskId"), actor)
+            return taskContext(request.arguments.requiredText("taskId"), actor)
         }
         if (request.name == "tomodachi.transition_task") {
-            val taskId = request.arguments.required("taskId")
+            val taskId = request.arguments.requiredText("taskId")
             val toStatus = request.arguments.requiredStatus("toStatus")
-            val reason = request.arguments.required("reason")
-            val key = request.arguments["idempotencyKey"] ?: UUID.randomUUID().toString()
+            val reason = request.arguments.requiredText("reason")
+            val key = request.arguments.optionalText("idempotencyKey") ?: UUID.randomUUID().toString()
             return transitions.transition(taskId, toStatus, reason, key, actor)
+        }
+        if (request.name == "tomodachi.record_agent_event") {
+            return recordAgentEvent(request.arguments, actor)
+        }
+        if (request.name == "tomodachi.attach_evidence") {
+            return attachEvidence(request.arguments, actor)
         }
         throw ApiException(HttpStatus.NOT_FOUND, "UNKNOWN_TOOL", "Unknown MCP tool")
     }
+
+    private fun recordAgentEvent(arguments: JsonNode, actor: PrincipalUser): McpAcceptedEventResponse {
+        val protocolVersion = arguments.requiredText("protocolVersion")
+        if (protocolVersion != "tomodachi-agent.v1") {
+            throw ApiException(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Unsupported protocol version")
+        }
+        val taskId = arguments.requiredText("taskId")
+        if (!tasks.existsById(taskId)) {
+            throw ApiException(HttpStatus.NOT_FOUND, "NOT_FOUND", "Resource not found")
+        }
+        val eventType = arguments.requiredObject("event").requiredText("type")
+        val key = arguments.requiredText("idempotencyKey")
+        arguments.requiredText("correlationId")
+        arguments.requiredText("traceparent")
+
+        auditEvents.findByActionAndDetail(AGENT_EVENT_ACTION, key)?.let { event ->
+            return McpAcceptedEventResponse(event.id, outboxEvents.countByAggregateId(taskId))
+        }
+
+        val eventId = "agent_event_${UUID.randomUUID()}"
+        auditEvents.save(AuditEvent(eventId, taskId, AGENT_EVENT_ACTION, actor.email, key))
+        outboxEvents.save(OutboxEvent("outbox_$eventId", taskId, eventType, arguments.toString()))
+        return McpAcceptedEventResponse(eventId, outboxEvents.countByAggregateId(taskId))
+    }
+
+    private fun attachEvidence(arguments: JsonNode, actor: PrincipalUser): McpAttachEvidenceResponse {
+        val taskId = arguments.requiredText("taskId")
+        val runId = arguments.requiredText("runId")
+        val key = arguments.requiredText("idempotencyKey")
+        val evidence = arguments.requiredArray("evidence")
+        if (evidence.isEmpty) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Evidence must not be empty")
+        }
+        val run = runs.findById(runId).orElseThrow {
+            ApiException(HttpStatus.NOT_FOUND, "NOT_FOUND", "Resource not found")
+        }
+        if (run.taskId != taskId) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Run does not belong to task")
+        }
+        evidence.forEach { item ->
+            item.requiredText("kind")
+            item.requiredText("path")
+            item.requiredText("summary")
+        }
+
+        auditEvents.findByActionAndDetail(ATTACH_EVIDENCE_ACTION, key)?.let {
+            return McpAttachEvidenceResponse(emptyList(), run.evidenceCount)
+        }
+
+        val evidenceIds = evidence.map { "evidence_${UUID.randomUUID()}" }
+        run.evidenceCount += evidenceIds.size
+        runs.save(run)
+        auditEvents.save(AuditEvent("agent_evidence_${UUID.randomUUID()}", taskId, ATTACH_EVIDENCE_ACTION, actor.email, key))
+        outboxEvents.save(OutboxEvent("outbox_evidence_${UUID.randomUUID()}", taskId, "com.tomodachi.agent.evidence.attached.v1", arguments.toString()))
+        return McpAttachEvidenceResponse(evidenceIds, run.evidenceCount)
+    }
 }
 
-private fun Map<String, String>.required(name: String): String =
-    this[name]?.takeIf { it.isNotBlank() }
+private const val AGENT_EVENT_ACTION = "AGENT_EVENT_RECORDED"
+private const val ATTACH_EVIDENCE_ACTION = "AGENT_EVIDENCE_ATTACHED"
+
+private fun JsonNode.requiredText(name: String): String =
+    this.get(name)?.takeIf { it.isTextual }?.asText()?.takeIf { it.isNotBlank() }
         ?: throw ApiException(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Missing MCP argument: $name")
 
-private fun Map<String, String>.requiredStatus(name: String): TaskStatus =
+private fun JsonNode.optionalText(name: String): String? =
+    this.get(name)?.takeIf { it.isTextual }?.asText()?.takeIf { it.isNotBlank() }
+
+private fun JsonNode.requiredObject(name: String): JsonNode =
+    this.get(name)?.takeIf { it.isObject }
+        ?: throw ApiException(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Missing MCP argument: $name")
+
+private fun JsonNode.requiredArray(name: String): JsonNode =
+    this.get(name)?.takeIf { it.isArray }
+        ?: throw ApiException(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Missing MCP argument: $name")
+
+private fun JsonNode.requiredStatus(name: String): TaskStatus =
     try {
-        TaskStatus.valueOf(required(name))
+        TaskStatus.valueOf(requiredText(name))
     } catch (error: IllegalArgumentException) {
         throw ApiException(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Invalid task status")
     }
