@@ -15,6 +15,7 @@ import type { LucideIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { requestCurrentUser } from "../api/authClient";
 import { isApiClientError } from "../api/http";
+import { requestOpenCodeSyncSummary } from "../api/integrationsClient";
 import { clearAuthSession, loadAuthSession } from "../auth/session";
 import { products } from "../mockData";
 import { useUiStore } from "../store";
@@ -47,6 +48,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     enabled: session !== null,
     queryFn: ({ signal }) => requestCurrentUser(signal),
     queryKey: ["auth", "me"],
+    retry: false,
+  });
+  const syncSummaryQuery = useQuery({
+    enabled: session !== null,
+    queryFn: ({ signal }) => requestOpenCodeSyncSummary(signal),
+    queryKey: ["integrations", "opencode", "sync-summary"],
     retry: false,
   });
   const primaryProduct = products[0];
@@ -110,7 +117,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <GlobalSearch />
           <div className="topbar-actions">
             <span className="sync-status">
-              <Badge tone="success">Sync 12m ago</Badge>
+              <SyncStatus
+                failed={syncSummaryQuery.isError}
+                isLoading={syncSummaryQuery.isLoading}
+                unresolved={syncSummaryQuery.data?.unresolvedEvidence}
+              />
             </span>
             {sessionEmail === undefined ? (
               <Link to="/login" className="button">
@@ -159,4 +170,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     </div>
   );
+}
+
+function SyncStatus({
+  failed,
+  isLoading,
+  unresolved,
+}: {
+  readonly failed: boolean;
+  readonly isLoading: boolean;
+  readonly unresolved: number | undefined;
+}) {
+  if (isLoading) {
+    return <Badge tone="neutral">Sync loading</Badge>;
+  }
+
+  if (failed) {
+    return <Badge tone="warning">Sync unavailable</Badge>;
+  }
+
+  return <Badge tone={unresolved === 0 ? "success" : "warning"}>Sync {unresolved ?? 0} unresolved</Badge>;
 }

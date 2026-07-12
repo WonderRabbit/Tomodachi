@@ -89,3 +89,14 @@ data class SearchResultDto(
     val path: String,
 )
 data class SearchResponse(val query: String, val type: String?, val items: List<SearchResultDto>, val total: Int)
+
+data class OpenCodeSyncSummaryDto(
+    val source: String,
+    val status: String,
+    val lastSyncLabel: String,
+    val totalRuns: Int,
+    val reviewRequiredRuns: Int,
+    val failedRuns: Int,
+    val unresolvedEvidence: Int,
+    val changedFiles: Int,
+)
