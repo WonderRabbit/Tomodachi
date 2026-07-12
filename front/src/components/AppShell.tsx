@@ -14,12 +14,13 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { requestCurrentUser } from "../api/authClient";
+import { requestDashboardSummary } from "../api/dashboardClient";
 import { isApiClientError } from "../api/http";
 import { requestOpenCodeSyncSummary } from "../api/integrationsClient";
 import { requestProducts } from "../api/productsClient";
 import { clearAuthSession, loadAuthSession } from "../auth/session";
 import { useUiStore } from "../store";
-import type { HealthStatus, NavItem } from "../types";
+import type { DashboardSummary, HealthStatus, NavItem } from "../types";
 import { GlobalSearch } from "./GlobalSearch";
 import { Badge } from "./Primitives";
 
@@ -60,6 +61,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     enabled: session !== null,
     queryFn: ({ signal }) => requestProducts(signal),
     queryKey: ["products", "shell-switcher"],
+    retry: false,
+  });
+  const dashboardSummaryQuery = useQuery({
+    enabled: session !== null,
+    queryFn: ({ signal }) => requestDashboardSummary(signal),
+    queryKey: ["dashboard-summary"],
     retry: false,
   });
   const primaryProduct = productsQuery.data?.[0];
@@ -156,21 +163,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className={`content-grid ${detailRailOpen ? "" : "rail-hidden"}`}>
           <main>{children}</main>
           {detailRailOpen && (
-            <aside className="detail-rail">
-              <span className="eyebrow">Review queue</span>
-              <h2>Agent review required</h2>
-              <p>
-                Runs with unresolved evidence appear here after backend import.
-              </p>
-              <div className="rail-card">
-                <strong>run_review_01</strong>
-                <span>2 unresolved items on TMD-102</span>
-              </div>
-              <div className="rail-card">
-                <strong>Stale architecture warning</strong>
-                <span>RFC-004 has not been refreshed in 5 days.</span>
-              </div>
-            </aside>
+            <DetailRail
+              failed={dashboardSummaryQuery.isError}
+              isLoading={dashboardSummaryQuery.isLoading}
+              summary={dashboardSummaryQuery.data}
+            />
           )}
         </div>
       </div>
@@ -196,4 +193,52 @@ function SyncStatus({
   }
 
   return <Badge tone={unresolved === 0 ? "success" : "warning"}>Sync {unresolved ?? 0} unresolved</Badge>;
+}
+
+function DetailRail({
+  failed,
+  isLoading,
+  summary,
+}: {
+  readonly failed: boolean;
+  readonly isLoading: boolean;
+  readonly summary: DashboardSummary | undefined;
+}) {
+  return (
+    <aside className="detail-rail">
+      <span className="eyebrow">Review queue</span>
+      <h2>Agent review required</h2>
+      <p>Runs with unresolved evidence appear here after backend import.</p>
+      {isLoading && (
+        <div className="rail-card">
+          <strong>Loading review queue</strong>
+          <span>Fetching backend dashboard summary.</span>
+        </div>
+      )}
+      {failed && (
+        <div className="rail-card">
+          <strong>Review queue unavailable</strong>
+          <span>Backend dashboard summary could not be loaded.</span>
+        </div>
+      )}
+      {!isLoading && !failed && summary?.reviewRuns.map((run) => (
+        <div className="rail-card" key={run.id}>
+          <strong>{run.id}</strong>
+          <span>{run.unresolvedCount} unresolved items · {run.model}</span>
+        </div>
+      ))}
+      {!isLoading && !failed && summary?.reviewRuns.length === 0 && (
+        <div className="rail-card">
+          <strong>No review queue</strong>
+          <span>No agent runs currently require review.</span>
+        </div>
+      )}
+      {!isLoading && !failed && summary?.architecture.staleArtifacts !== undefined && (
+        <div className="rail-card">
+          <strong>Architecture stale warnings</strong>
+          <span>{summary.architecture.staleArtifacts} stale artifacts reported by backend.</span>
+        </div>
+      )}
+    </aside>
+  );
 }

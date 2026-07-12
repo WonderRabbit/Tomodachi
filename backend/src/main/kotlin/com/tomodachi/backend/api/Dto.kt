@@ -100,3 +100,35 @@ data class OpenCodeSyncSummaryDto(
     val unresolvedEvidence: Int,
     val changedFiles: Int,
 )
+
+data class DashboardProjectSummaryDto(
+    val id: String,
+    val key: String,
+    val name: String,
+    val status: HealthStatus,
+    val progress: Int,
+    val blockers: Int,
+)
+
+data class DashboardReviewRunDto(
+    val id: String,
+    val model: String,
+    val unresolvedCount: Int,
+)
+
+data class DashboardArchitectureSummaryDto(
+    val acceptedArtifacts: Int,
+    val staleArtifacts: Int,
+    val linkedTasks: Int,
+)
+
+data class DashboardSummaryDto(
+    val activeProjects: Int,
+    val tasksInFlight: Int,
+    val blockedTasks: Int,
+    val blockedTaskTitle: String?,
+    val agentReviewQueue: Int,
+    val projects: List<DashboardProjectSummaryDto>,
+    val reviewRuns: List<DashboardReviewRunDto>,
+    val architecture: DashboardArchitectureSummaryDto,
+)

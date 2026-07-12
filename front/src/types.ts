@@ -114,6 +114,38 @@ export interface SearchResult {
   path: string;
 }
 
+export interface DashboardProjectSummary {
+  id: string;
+  key: string;
+  name: string;
+  status: HealthStatus;
+  progress: number;
+  blockers: number;
+}
+
+export interface DashboardReviewRun {
+  id: string;
+  model: string;
+  unresolvedCount: number;
+}
+
+export interface DashboardArchitectureSummary {
+  acceptedArtifacts: number;
+  staleArtifacts: number;
+  linkedTasks: number;
+}
+
+export interface DashboardSummary {
+  activeProjects: number;
+  tasksInFlight: number;
+  blockedTasks: number;
+  blockedTaskTitle: string | null;
+  agentReviewQueue: number;
+  projects: DashboardProjectSummary[];
+  reviewRuns: DashboardReviewRun[];
+  architecture: DashboardArchitectureSummary;
+}
+
 export interface ArchitectureArtifact {
   id: string;
   type: ArtifactType;
