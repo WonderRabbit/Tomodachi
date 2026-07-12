@@ -212,9 +212,9 @@ F3 실행 전 사용자의 명시적 승인을 받아 검증 prerequisite인 `po
 
 ## 비차단 후속 사항
 
-1. schema guard 범위: 실제 table/index와 JPA validate는 통과했지만 CHECK/FK 의미 전체와 data migration 호환성은 이 가드 범위가 아니다.
+1. schema guard 범위: 후속 커밋에서 실제 table/index에 더해 CHECK/FK catalog 비교까지 확장했다. 다만 CHECK/FK의 도메인 의미 전체와 data migration 호환성은 이 가드 범위가 아니다.
 2. TOCTOU 방어 깊이: Node path 검사 후 read 사이를 동시에 바꿀 수 있는 동일 계정 공격은 file-descriptor/inode 기반 처리까지 가지 않아 LOW로 남아 있다.
-3. LOC 경계: remote-claims validator는 pure LOC 상한에 가까워 다음 기능 추가 전 parser/workflow 검증 책임을 분리해야 한다.
+3. LOC 경계: 후속 커밋에서 remote-claims validator의 CLI wrapper와 계약 검증 lib를 분리했다. 다음 기능 추가는 `scripts/lib/remote-claims-contract.mjs` 쪽에 국소화한다.
 4. AGENTS 적용: 네 제안은 자동 적용하지 말고 파일별 승인·diff 검토 후 반영해야 한다.
 5. research/remote freshness: 만료 시점에는 승인된 read-only 재관측으로 inventory를 갱신해야 한다.
 6. ULW control-plane: 구현·criteria·plan/Boulder와 aggregate checkpoint가 모두 완료됐다. C001~C003, fresh code/QA/gate, malicious allowlist 6/6, exact F4 100경로가 최종 완료 근거다.

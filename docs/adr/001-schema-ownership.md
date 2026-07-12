@@ -12,7 +12,7 @@
 
 1. `db/init.sql`을 현재 PostgreSQL 배포 스키마의 권위 있는 소스로 유지한다.
 2. JPA 엔티티는 스키마 생성 소스가 아니라 `dev`/`prod`의 `ddl-auto=validate` 검증 대상이다.
-3. `scripts/verify-schema-parity.sh`는 빈 일회용 PostgreSQL에 `db/init.sql`을 적용하고, 백엔드를 `dev` 프로필로 기동해 JPA 검증을 통과시킨 뒤, `pg_catalog`의 테이블과 인덱스를 체크인된 fixture와 비교한다.
+3. `scripts/verify-schema-parity.sh`는 빈 일회용 PostgreSQL에 `db/init.sql`을 적용하고, 백엔드를 `dev` 프로필로 기동해 JPA 검증을 통과시킨 뒤, `pg_catalog`의 테이블, 인덱스, CHECK 제약, FK 제약을 체크인된 fixture와 비교한다.
 4. Flyway 전환은 migration baseline, 롤백, 운영 적용 순서를 별도로 승인받아야 하므로 이번 결정에서 보류한다. 현재 `spring.flyway.enabled=false`를 바꾸지 않는다.
 
 ## 검증 계약
@@ -31,7 +31,7 @@
 
 ## 결과와 한계
 
-이 결정은 배포 SQL과 ORM 매핑의 드리프트를 조기에 차단하고, JPA가 검증하지 않는 인덱스 누락도 탐지한다. 반면 PostgreSQL 제약 조건의 의미 전체와 데이터 migration 호환성은 이 가드의 범위가 아니다. 제약 조건 변경은 `db/init.sql`, Kotlin enum/API 계약을 함께 검토해야 하며, Flyway 도입 시에는 별도 ADR과 migration 검증을 추가한다.
+이 결정은 배포 SQL과 ORM 매핑의 드리프트를 조기에 차단하고, JPA가 검증하지 않는 인덱스, CHECK 정의, FK 정의 누락도 탐지한다. 반면 PostgreSQL 제약 조건의 도메인 의미 전체와 데이터 migration 호환성은 이 가드의 범위가 아니다. 제약 조건 변경은 `db/init.sql`, Kotlin enum/API 계약을 함께 검토해야 하며, Flyway 도입 시에는 별도 ADR과 migration 검증을 추가한다.
 
 ## 차선책
 

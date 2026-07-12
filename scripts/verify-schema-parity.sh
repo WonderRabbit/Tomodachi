@@ -45,8 +45,23 @@ esac
 command -v jq >/dev/null 2>&1 || fail 'jq client is unavailable' 3
 
 fixture_filter='type == "object"
-  and (keys | sort) == ["indexes", "tables"]
+  and (keys | sort) == ["checks", "foreignKeys", "indexes", "tables"]
   and (.tables | type == "array" and all(.[]; type == "string"))
+  and (.checks | type == "array" and all(.[];
+    type == "object"
+    and (keys | sort) == ["definition", "name", "table"]
+    and (.table | type == "string")
+    and (.name | type == "string")
+    and (.definition | type == "string")))
+  and (.foreignKeys | type == "array" and all(.[];
+    type == "object"
+    and (keys | sort) == ["columns", "foreignColumns", "foreignTable", "name", "onDelete", "table"]
+    and (.table | type == "string")
+    and (.name | type == "string")
+    and (.foreignTable | type == "string")
+    and (.onDelete | type == "string")
+    and (.columns | type == "array" and length > 0 and all(.[]; type == "string"))
+    and (.foreignColumns | type == "array" and length > 0 and all(.[]; type == "string"))))
   and (.indexes | type == "array" and all(.[];
     type == "object"
     and (keys | sort) == ["columns", "name", "primary", "table", "unique"]
@@ -232,6 +247,41 @@ catalog_sql="SELECT jsonb_build_object(
   'tables', COALESCE((SELECT jsonb_agg(c.relname ORDER BY c.relname)
     FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relkind = 'r'), '[]'::jsonb),
+  'checks', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'table', t.relname,
+      'name', con.conname,
+      'definition', pg_get_constraintdef(con.oid, true))
+    ORDER BY t.relname, con.conname)
+    FROM pg_constraint con
+    JOIN pg_class t ON t.oid = con.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public' AND con.contype = 'c'), '[]'::jsonb),
+  'foreignKeys', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'table', t.relname,
+      'name', con.conname,
+      'columns', to_jsonb(ARRAY(SELECT a.attname
+        FROM unnest(con.conkey) WITH ORDINALITY AS k(attnum, ord)
+        JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum
+        ORDER BY k.ord)),
+      'foreignTable', ft.relname,
+      'foreignColumns', to_jsonb(ARRAY(SELECT fa.attname
+        FROM unnest(con.confkey) WITH ORDINALITY AS k(attnum, ord)
+        JOIN pg_attribute fa ON fa.attrelid = ft.oid AND fa.attnum = k.attnum
+        ORDER BY k.ord)),
+      'onDelete', CASE con.confdeltype
+        WHEN 'a' THEN 'NO ACTION'
+        WHEN 'r' THEN 'RESTRICT'
+        WHEN 'c' THEN 'CASCADE'
+        WHEN 'n' THEN 'SET NULL'
+        WHEN 'd' THEN 'SET DEFAULT'
+        ELSE con.confdeltype::text
+      END)
+    ORDER BY t.relname, con.conname)
+    FROM pg_constraint con
+    JOIN pg_class t ON t.oid = con.conrelid
+    JOIN pg_class ft ON ft.oid = con.confrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public' AND con.contype = 'f'), '[]'::jsonb),
   'indexes', COALESCE((SELECT jsonb_agg(jsonb_build_object(
       'table', t.relname,
       'name', x.relname,
@@ -259,6 +309,18 @@ if ! cmp -s "$tmp_dir/expected.normalized.json" "$tmp_dir/actual.normalized.json
   jq -r --slurpfile actual "$tmp_dir/actual.normalized.json" '
     ($actual[0].indexes - .indexes)[] |
     "\(.table) index mismatch: unexpected actual \(.name)"' "$tmp_dir/expected.normalized.json" >&2
+  jq -r --slurpfile actual "$tmp_dir/actual.normalized.json" '
+    (.foreignKeys - $actual[0].foreignKeys)[] |
+    "\(.table) foreign key mismatch: missing actual \(.name)"' "$tmp_dir/expected.normalized.json" >&2
+  jq -r --slurpfile actual "$tmp_dir/actual.normalized.json" '
+    ($actual[0].foreignKeys - .foreignKeys)[] |
+    "\(.table) foreign key mismatch: unexpected actual \(.name)"' "$tmp_dir/expected.normalized.json" >&2
+  jq -r --slurpfile actual "$tmp_dir/actual.normalized.json" '
+    (.checks - $actual[0].checks)[] |
+    "\(.table) check mismatch: missing actual \(.name)"' "$tmp_dir/expected.normalized.json" >&2
+  jq -r --slurpfile actual "$tmp_dir/actual.normalized.json" '
+    ($actual[0].checks - .checks)[] |
+    "\(.table) check mismatch: unexpected actual \(.name)"' "$tmp_dir/expected.normalized.json" >&2
   diff -u "$tmp_dir/expected.normalized.json" "$tmp_dir/actual.normalized.json" >&2 || true
   fail 'catalog mismatch'
 fi

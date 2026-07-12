@@ -13,6 +13,32 @@
     "users",
     "workspace"
   ],
+  "checks": [
+    {"table":"agent_run","name":"ck_agent_run_evidence_count","definition":"CHECK (evidence_count >= 0)"},
+    {"table":"agent_run","name":"ck_agent_run_status","definition":"CHECK (status::text = ANY (ARRAY['Completed'::character varying, 'Failed'::character varying, 'ReviewRequired'::character varying]::text[]))"},
+    {"table":"agent_run","name":"ck_agent_run_unresolved_count","definition":"CHECK (unresolved_count >= 0)"},
+    {"table":"architecture_artifact","name":"ck_architecture_artifact_status","definition":"CHECK (status::text = ANY (ARRAY['Accepted'::character varying, 'Proposed'::character varying, 'Stale'::character varying]::text[]))"},
+    {"table":"architecture_artifact","name":"ck_architecture_artifact_type","definition":"CHECK (type::text = ANY (ARRAY['ADR'::character varying, 'RFC'::character varying, 'API'::character varying, 'Diagram'::character varying]::text[]))"},
+    {"table":"product","name":"ck_product_status","definition":"CHECK (status::text = ANY (ARRAY['Healthy'::character varying, 'Watch'::character varying, 'Blocked'::character varying]::text[]))"},
+    {"table":"project","name":"ck_project_progress","definition":"CHECK (progress >= 0 AND progress <= 100)"},
+    {"table":"project","name":"ck_project_status","definition":"CHECK (status::text = ANY (ARRAY['Healthy'::character varying, 'Watch'::character varying, 'Blocked'::character varying]::text[]))"},
+    {"table":"task_transition","name":"ck_task_transition_from_status","definition":"CHECK (from_status::text = ANY (ARRAY['Ready'::character varying, 'InProgress'::character varying, 'Blocked'::character varying, 'Review'::character varying, 'QA'::character varying, 'Done'::character varying]::text[]))"},
+    {"table":"task_transition","name":"ck_task_transition_to_status","definition":"CHECK (to_status::text = ANY (ARRAY['Ready'::character varying, 'InProgress'::character varying, 'Blocked'::character varying, 'Review'::character varying, 'QA'::character varying, 'Done'::character varying]::text[]))"},
+    {"table":"tasks","name":"ck_tasks_priority","definition":"CHECK (priority::text = ANY (ARRAY['Low'::character varying, 'Normal'::character varying, 'High'::character varying, 'Urgent'::character varying]::text[]))"},
+    {"table":"tasks","name":"ck_tasks_status","definition":"CHECK (status::text = ANY (ARRAY['Ready'::character varying, 'InProgress'::character varying, 'Blocked'::character varying, 'Review'::character varying, 'QA'::character varying, 'Done'::character varying]::text[]))"},
+    {"table":"users","name":"ck_users_role","definition":"CHECK (role::text = ANY (ARRAY['ADMIN'::character varying, 'PRODUCT_MANAGER'::character varying, 'ENGINEER'::character varying, 'REVIEWER'::character varying, 'VIEWER'::character varying, 'AGENT_SERVICE'::character varying]::text[]))"}
+  ],
+  "foreignKeys": [
+    {"table":"agent_run","name":"fk_agent_run_task","columns":["task_id"],"foreignTable":"tasks","foreignColumns":["id"],"onDelete":"NO ACTION"},
+    {"table":"agent_run_changed_files","name":"fk_agent_run_changed_files_run","columns":["agent_run_id"],"foreignTable":"agent_run","foreignColumns":["id"],"onDelete":"CASCADE"},
+    {"table":"project","name":"fk_project_product","columns":["product_id"],"foreignTable":"product","foreignColumns":["id"],"onDelete":"NO ACTION"},
+    {"table":"project","name":"fk_project_workspace","columns":["workspace_id"],"foreignTable":"workspace","foreignColumns":["id"],"onDelete":"NO ACTION"},
+    {"table":"task_artifact_link","name":"fk_task_artifact_link_artifact","columns":["artifact_id"],"foreignTable":"architecture_artifact","foreignColumns":["id"],"onDelete":"CASCADE"},
+    {"table":"task_artifact_link","name":"fk_task_artifact_link_task","columns":["task_id"],"foreignTable":"tasks","foreignColumns":["id"],"onDelete":"CASCADE"},
+    {"table":"task_transition","name":"fk_task_transition_task","columns":["task_id"],"foreignTable":"tasks","foreignColumns":["id"],"onDelete":"NO ACTION"},
+    {"table":"tasks","name":"fk_tasks_project","columns":["project_id"],"foreignTable":"project","foreignColumns":["id"],"onDelete":"NO ACTION"},
+    {"table":"workspace","name":"fk_workspace_product","columns":["product_id"],"foreignTable":"product","foreignColumns":["id"],"onDelete":"NO ACTION"}
+  ],
   "indexes": [
     {"table":"agent_run","name":"agent_run_pkey","unique":true,"primary":true,"columns":["id"]},
     {"table":"agent_run","name":"ix_agent_run_task_id","unique":false,"primary":false,"columns":["task_id"]},
