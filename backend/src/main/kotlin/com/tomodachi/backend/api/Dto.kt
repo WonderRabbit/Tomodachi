@@ -80,3 +80,12 @@ data class TaskContextResponse(
 data class McpInvokeRequest(val name: String, val arguments: Map<String, String>)
 data class McpTool(val name: String, val description: String)
 data class McpToolsResponse(val tools: List<McpTool>)
+
+data class SearchResultDto(
+    val type: String,
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val path: String,
+)
+data class SearchResponse(val query: String, val type: String?, val items: List<SearchResultDto>, val total: Int)

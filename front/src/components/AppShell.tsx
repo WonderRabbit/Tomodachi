@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Menu,
   PanelsTopLeft,
-  Search,
   Settings,
   Sparkles,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { clearAuthSession, loadAuthSession } from "../auth/session";
 import { products } from "../mockData";
 import { useUiStore } from "../store";
 import type { HealthStatus, NavItem } from "../types";
+import { GlobalSearch } from "./GlobalSearch";
 import { Badge } from "./Primitives";
 
 interface ShellNavItem extends NavItem {
@@ -107,10 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>{productName}</span>
             <Badge tone="warning">{productStatus}</Badge>
           </div>
-          <label className="search-box">
-            <Search size={16} />
-            <input placeholder="Search tasks, artifacts, agent runs" />
-          </label>
+          <GlobalSearch />
           <div className="topbar-actions">
             <span className="sync-status">
               <Badge tone="success">Sync 12m ago</Badge>

@@ -104,6 +104,16 @@ export interface TaskContext {
   rules: string[];
 }
 
+export type SearchResultType = "task" | "project" | "artifact" | "agent-run";
+
+export interface SearchResult {
+  type: SearchResultType;
+  id: string;
+  title: string;
+  subtitle: string;
+  path: string;
+}
+
 export interface ArchitectureArtifact {
   id: string;
   type: ArtifactType;
