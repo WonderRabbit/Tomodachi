@@ -75,12 +75,24 @@ export async function apiJson(path: string, options?: Options): Promise<unknown>
   try {
     return await api(path, options).json<unknown>();
   } catch (error) {
-    if (error instanceof HTTPError) {
+    if (error instanceof HTTPError || isHttpErrorLike(error)) {
       throw await apiErrorFromResponse(error.response);
     }
 
     throw error;
   }
+}
+
+function isHttpErrorLike(error: unknown): error is { readonly name: "HTTPError"; readonly response: Response } {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  if (!("name" in error) || !("response" in error)) {
+    return false;
+  }
+
+  return error.name === "HTTPError" && error.response instanceof Response;
 }
 
 async function apiErrorFromResponse(response: Response): Promise<ApiClientError> {
