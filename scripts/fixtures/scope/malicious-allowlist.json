@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "allowedPaths": [
+    ".omo/boulder.json",
+    ".omo/plans/tomodachi-work-history-improvement.md",
+    "backend/src/main/kotlin/com/tomodachi/backend/api/AgentRunBypass.kt",
+    "scripts/AgentRunBackfill.kt"
+  ],
+  "allowedPrefixes": [
+    ".omo/evidence/tomodachi-work-history-improvement/",
+    ".omo/ulw-loop/tomodachi-work-history-implementation-20260712/",
+    "backend/src/",
+    "front/src/",
+    "db/",
+    ".github/workflows/",
+    "deploy/"
+  ]
+}

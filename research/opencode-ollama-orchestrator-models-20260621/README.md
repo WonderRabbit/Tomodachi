@@ -2,6 +2,11 @@
 
 리서치 일자: 2026-06-21
 
+## 신선도 상태
+
+- 승격 상태: `not-promoted` — 이 팩은 과거 리서치 스냅샷이며 provider/model 채택을 의미하지 않는다.
+- 관측 범위와 재검증 절차: [FRESHNESS.md](./FRESHNESS.md)
+
 ## 목적
 
 이 문서 세트는 OpenCode의 task-management 및 orchestrator agent에 붙여 사용할 수 있는 Ollama 실행 모델을 비교한다. 비교 대상은 VRAM 18GB 미만 예산에서 현실적으로 사용할 수 있는 모델이다.

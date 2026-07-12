@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "validationDate": "2026-07-12",
+  "repository": "WonderRabbit/Tomodachi",
+  "paths": [
+    "plan/tomodachi-env-cicd.md",
+    "docs/ci-cd-options.md",
+    "docs/environment-contract.md"
+  ],
+  "remoteClaims": [
+    {
+      "id": "RC-PROD-REVIEWER-20260703",
+      "classification": "remote-observation",
+      "subject": "prod environment required reviewer",
+      "observedAt": "2026-07-03",
+      "expiresAt": "2026-08-02",
+      "source": "GET https://api.github.com/repos/WonderRabbit/Tomodachi/environments/prod",
+      "verificationMethod": {
+        "argv": ["gh", "api", "--method", "GET", "repos/WonderRabbit/Tomodachi/environments/prod", "--jq", ".protection_rules"]
+      },
+      "documents": [
+        "plan/tomodachi-env-cicd.md",
+        "docs/ci-cd-options.md"
+      ]
+    },
+    {
+      "id": "RC-PROD-ADMIN-BYPASS-20260703",
+      "classification": "remote-observation",
+      "subject": "prod environment administrator bypass",
+      "observedAt": "2026-07-03",
+      "expiresAt": "2026-08-02",
+      "source": "GET https://api.github.com/repos/WonderRabbit/Tomodachi/environments/prod",
+      "verificationMethod": {
+        "argv": ["gh", "api", "--method", "GET", "repos/WonderRabbit/Tomodachi/environments/prod", "--jq", ".can_admins_bypass"]
+      },
+      "documents": [
+        "plan/tomodachi-env-cicd.md",
+        "docs/ci-cd-options.md"
+      ]
+    },
+    {
+      "id": "RC-PROD-BRANCH-POLICY-20260703",
+      "classification": "remote-observation",
+      "subject": "prod environment deployment branch policy",
+      "observedAt": "2026-07-03",
+      "expiresAt": "2026-08-02",
+      "source": "GET https://api.github.com/repos/WonderRabbit/Tomodachi/environments/prod",
+      "verificationMethod": {
+        "argv": ["gh", "api", "--method", "GET", "repos/WonderRabbit/Tomodachi/environments/prod", "--jq", ".deployment_branch_policy"]
+      },
+      "documents": [
+        "plan/tomodachi-env-cicd.md",
+        "docs/ci-cd-options.md"
+      ]
+    }
+  ],
+  "localFacts": [
+    {
+      "id": "LOCAL-PROD-DISPATCH-GUARD",
+      "classification": "source-controlled-local-fact",
+      "source": ".github/workflows/deploy-prod.yml:38-53",
+      "documents": [
+        "plan/tomodachi-env-cicd.md",
+        "docs/ci-cd-options.md",
+        "docs/environment-contract.md"
+      ],
+      "statement": "The production workflow accepts only main or v* refs and requires confirm_prod=deploy-prod."
+    }
+  ],
+  "nonRemoteClaims": [
+    {
+      "id": "POLICY-PROD-APPROVAL-REQUIRED",
+      "classification": "policy",
+      "documents": [
+        "plan/tomodachi-env-cicd.md",
+        "docs/ci-cd-options.md",
+        "docs/environment-contract.md"
+      ],
+      "statement": "Production deployment must retain explicit approval, ref, confirmation, and secret-scope gates regardless of remote observation freshness."
+    },
+    {
+      "id": "EXTERNAL-JANG-AGENT-PORTAL",
+      "classification": "external-reference",
+      "documents": [
+        "plan/tomodachi-env-cicd.md",
+        "docs/ci-cd-options.md"
+      ],
+      "statement": "The jang-agent-potal Jenkins material is an external cautionary reference, not Tomodachi repository or remote-setting evidence."
+    },
+    {
+      "id": "GENERIC-CLOUD-OPERATING-GUIDANCE",
+      "classification": "generic-guidance",
+      "documents": [
+        "plan/tomodachi-env-cicd.md",
+        "docs/ci-cd-options.md",
+        "docs/environment-contract.md"
+      ],
+      "statement": "Cloud cost, secret, TLS, backup, and managed-service recommendations are policy guidance whose adoption requires separate verification."
+    }
+  ],
+  "remoteMutationPolicy": "Remote rechecks are read-only. Query or mutation of repository or environment settings requires separate explicit authorization."
+}

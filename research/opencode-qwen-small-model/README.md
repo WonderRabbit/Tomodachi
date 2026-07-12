@@ -3,6 +3,11 @@
 작성일: 2026-06-21  
 원본 ultraresearch 저널: `.omo/ultraresearch/20260621-opencode-small-model-decomposition/`
 
+## 신선도 상태
+
+- 승격 상태: `not-promoted` — 이 팩은 과거 리서치 스냅샷이며 provider/model 채택을 의미하지 않는다.
+- 관측 범위와 재검증 절차: [FRESHNESS.md](./FRESHNESS.md)
+
 ## 결론
 
 Qwen3.6 계열이나 Qwen3-Coder 계열 small-active-parameter 모델을 OpenCode에 연결하는 것은 가능하다. 다만 안정적인 운영 모델은 "작은 모델에게 큰 문제를 그대로 맡긴다"가 아니다. 안정적인 구조는 다음 세 계층으로 나뉜다.

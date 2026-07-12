@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "validationTimeZone": "Asia/Seoul",
+  "localToolProbe": {
+    "command": "sg --version",
+    "observedAt": "2026-07-12T13:58:23+09:00",
+    "output": "ast-grep 0.44.1",
+    "outputSha256": "c80844709e3258ca29fcc3932fdd297f4345a91c0ac0416ef8f0923e8381d022"
+  },
+  "packs": [
+    {
+      "id": "opencode-ollama-orchestrator-models-20260621",
+      "path": "research/opencode-ollama-orchestrator-models-20260621",
+      "readme": "research/opencode-ollama-orchestrator-models-20260621/README.md",
+      "freshnessFile": "research/opencode-ollama-orchestrator-models-20260621/FRESHNESS.md"
+    },
+    {
+      "id": "opencode-qwen-small-model",
+      "path": "research/opencode-qwen-small-model",
+      "readme": "research/opencode-qwen-small-model/README.md",
+      "freshnessFile": "research/opencode-qwen-small-model/FRESHNESS.md",
+      "observedAt": "2026-07-12T13:58:23+09:00"
+    },
+    {
+      "id": "opencode-qwen-tool-wrapper-strategy-20260621",
+      "path": "research/opencode-qwen-tool-wrapper-strategy-20260621",
+      "readme": "research/opencode-qwen-tool-wrapper-strategy-20260621/README.md",
+      "freshnessFile": "research/opencode-qwen-tool-wrapper-strategy-20260621/FRESHNESS.md",
+      "observedAt": "2026-07-12T13:58:23+09:00"
+    },
+    {
+      "id": "opencode-small-model-helper-cli",
+      "path": "research/opencode-small-model-helper-cli",
+      "readme": "research/opencode-small-model-helper-cli/README.md",
+      "freshnessFile": "research/opencode-small-model-helper-cli/FRESHNESS.md",
+      "observedAt": "2026-07-12T13:58:23+09:00"
+    }
+  ]
+}

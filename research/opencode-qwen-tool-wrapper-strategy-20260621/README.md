@@ -4,6 +4,11 @@
 대상: OpenCode에서 Qwen3.6-35B-A3B, Qwen3-Coder 30B/35B-active급 모델을 사용할 때의 CLI tool 사용 전략  
 결론: 모델에게 `ast-grep`, `ripgrep`, `jq`, `yq`, `mdq`, `fd`를 "그냥 활용하라"고 맡기면 안 된다. 반복되는 패턴은 wrapper, recipe, custom tool, MCP tool로 올려 모델의 shell 조합 부담을 줄여야 한다.
 
+## 신선도 상태
+
+- 승격 상태: `not-promoted` — 이 팩은 과거 리서치 스냅샷이며 tool 도입을 의미하지 않는다.
+- 관측 범위와 재검증 절차: [FRESHNESS.md](./FRESHNESS.md)
+
 ## 산출물
 
 - `README.md`: 결론과 운영 모델.

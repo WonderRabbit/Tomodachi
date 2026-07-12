@@ -1,0 +1,2 @@
+# Given: refs/heads/main|refs/tags/v* appears only in a comment.
+# Then: if [ "$CONFIRM_PROD" != "deploy-prod" ] also appears only in a comment.

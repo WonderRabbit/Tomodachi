@@ -22,6 +22,12 @@
 - 로컬 Docker/Compose PostgreSQL 경로도 현재 계약에서는 `SPRING_PROFILES_ACTIVE=dev`를 사용한다.
 - `db/init.sql`은 standalone schema mirror다. Docker Compose의 PostgreSQL empty volume에서는 최초 1회만 자동 적용된다.
 
+## 원격 운영 상태 증거 계약
+
+GitHub Environment 같은 원격 설정은 이 문서의 영구 현재 사실이 아니다. `plan/history/remote-claims.json`이 관측일(`observedAt`), REST GET 출처, 만료일(`expiresAt`), 실행 인자 배열로 고정한 읽기 전용 `gh api --method GET` 재검증 명령을 소유한다. Validator는 기본적으로 Asia/Seoul의 실행일과 `validationDate`가 같은지 확인하고, 결정적 fixture 검증에서만 `--as-of YYYY-MM-DD`로 같은 clock boundary를 주입한다. 만료된 관측은 재검증 전까지 현재 상태의 근거로 사용하지 않으며, 원격 조회나 설정 변경은 별도 명시 승인이 필요하다.
+
+반면 `.github/workflows/deploy-prod.yml:38-53`의 `main`/`v*` ref 제한과 `confirm_prod=deploy-prod` 검사는 source-controlled local fact다. 이 로컬 guard는 원격 Environment 관측의 유효 여부와 무관하게 유지한다.
+
 ## 필수 build tools
 
 | 영역 | 필수 도구 | local | dev/prod |

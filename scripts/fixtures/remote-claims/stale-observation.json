@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "validationDate": "2026-08-03",
+  "repository": "WonderRabbit/Tomodachi",
+  "paths": [
+    "scripts/fixtures/remote-claims/stale-observation.md"
+  ],
+  "remoteClaims": [
+    {
+      "id": "RC-PROD-REVIEWER-20260703",
+      "classification": "remote-observation",
+      "subject": "prod environment required reviewer",
+      "observedAt": "2026-07-03",
+      "expiresAt": "2026-08-02",
+      "source": "GET https://api.github.com/repos/WonderRabbit/Tomodachi/environments/prod",
+      "verificationMethod": {
+        "argv": ["gh", "api", "--method", "GET", "repos/WonderRabbit/Tomodachi/environments/prod", "--jq", ".protection_rules"]
+      },
+      "documents": [
+        "scripts/fixtures/remote-claims/stale-observation.md"
+      ]
+    },
+    {
+      "id": "RC-PROD-ADMIN-BYPASS-20260703",
+      "classification": "remote-observation",
+      "subject": "prod environment administrator bypass",
+      "observedAt": "2026-07-03",
+      "expiresAt": "2026-08-02",
+      "source": "GET https://api.github.com/repos/WonderRabbit/Tomodachi/environments/prod",
+      "verificationMethod": {
+        "argv": ["gh", "api", "--method", "GET", "repos/WonderRabbit/Tomodachi/environments/prod", "--jq", ".can_admins_bypass"]
+      },
+      "documents": [
+        "scripts/fixtures/remote-claims/stale-observation.md"
+      ]
+    },
+    {
+      "id": "RC-PROD-BRANCH-POLICY-20260703",
+      "classification": "remote-observation",
+      "subject": "prod environment deployment branch policy",
+      "observedAt": "2026-07-03",
+      "expiresAt": "2026-08-02",
+      "source": "GET https://api.github.com/repos/WonderRabbit/Tomodachi/environments/prod",
+      "verificationMethod": {
+        "argv": ["gh", "api", "--method", "GET", "repos/WonderRabbit/Tomodachi/environments/prod", "--jq", ".deployment_branch_policy"]
+      },
+      "documents": [
+        "scripts/fixtures/remote-claims/stale-observation.md"
+      ]
+    }
+  ],
+  "localFacts": [
+    {
+      "id": "LOCAL-PROD-DISPATCH-GUARD",
+      "classification": "source-controlled-local-fact",
+      "source": ".github/workflows/deploy-prod.yml:38-53",
+      "documents": ["scripts/fixtures/remote-claims/stale-observation.md"],
+      "statement": "Fixture local workflow fact with meaningful content."
+    }
+  ],
+  "nonRemoteClaims": [
+    { "id": "POLICY-PROD-APPROVAL-REQUIRED", "classification": "policy", "documents": ["scripts/fixtures/remote-claims/stale-observation.md"], "statement": "Fixture production approval policy with meaningful content." },
+    { "id": "EXTERNAL-JANG-AGENT-PORTAL", "classification": "external-reference", "documents": ["scripts/fixtures/remote-claims/stale-observation.md"], "statement": "Fixture external reference classification with meaningful content." },
+    { "id": "GENERIC-CLOUD-OPERATING-GUIDANCE", "classification": "generic-guidance", "documents": ["scripts/fixtures/remote-claims/stale-observation.md"], "statement": "Fixture generic cloud guidance with meaningful content." }
+  ],
+  "remoteMutationPolicy": "Remote rechecks are read-only."
+}

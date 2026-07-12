@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-12T12:08:00+09:00",
+  "head": "0a07266d53b83cd07017ec912c616eecbcc3d693",
+  "headSubject": "Add environment-aware CI/CD setup",
+  "recentChronology": [
+    {
+      "commit": "0a07266d53b83cd07017ec912c616eecbcc3d693",
+      "committedAt": "2026-07-03T02:43:36+09:00",
+      "subject": "Add environment-aware CI/CD setup"
+    },
+    {
+      "commit": "0a071298a65086203689b6ac7b25291e107577e2",
+      "committedAt": "2026-06-24T23:11:41+09:00",
+      "subject": "Add deploy QA workflow"
+    },
+    {
+      "commit": "771cbd053277eb111540c1ffa036135cf04aa7a0",
+      "committedAt": "2026-06-24T23:08:11+09:00",
+      "subject": "Add one-command deployment flow"
+    },
+    {
+      "commit": "caeea936af9b624a142aa3059dc453693ef42b0a",
+      "committedAt": "2026-06-21T22:36:14+09:00",
+      "subject": "Add Tomodachi agent integration installation guide"
+    },
+    {
+      "commit": "49640fc67d3384f04a13878b6a3b6cfc7fb3687d",
+      "committedAt": "2026-06-21T19:56:22+09:00",
+      "subject": "Translate project documentation to Korean"
+    },
+    {
+      "commit": "6ac20fbf30168d97aca1c2211e7e145657607605",
+      "committedAt": "2026-06-21T19:55:55+09:00",
+      "subject": "Add Spring Boot backend and schema"
+    },
+    {
+      "commit": "f762ece4dd7d5a7a9f451bff17348a167f5aa3bc",
+      "committedAt": "2026-06-21T16:08:17+09:00",
+      "subject": "Add dashboard frontend MVP"
+    }
+  ],
+  "untrackedInputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "e7034d1f574e446b07cedeb1c7209ba3b2354c73f9edd82613fd41a9e2a99293"
+    },
+    {
+      "path": "backend/AGENTS.md",
+      "sha256": "13f842e82ae45e6774bafc1f278ccab8c05df8ba1ea93f8ba3cf73c4da11dbd7"
+    },
+    {
+      "path": "front/AGENTS.md",
+      "sha256": "38bc61c002961fc4be622b8803e54223da72da64ecb8015ce177ab1524277037"
+    },
+    {
+      "path": "plan/tomodachi-work-history-improvement.md",
+      "sha256": "53fcb22bda396c7e47dc82a6d884f594990f8c4dbe9e9f811b33f5b49da10f8e"
+    },
+    {
+      "path": "research/AGENTS.md",
+      "sha256": "73529c86f32a7f9cd342d2493019a9c4f6228366dc25b40a3a6f0bdda0728980"
+    }
+  ],
+  "protectedAgents": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "e7034d1f574e446b07cedeb1c7209ba3b2354c73f9edd82613fd41a9e2a99293"
+    },
+    {
+      "path": "backend/AGENTS.md",
+      "sha256": "13f842e82ae45e6774bafc1f278ccab8c05df8ba1ea93f8ba3cf73c4da11dbd7"
+    },
+    {
+      "path": "front/AGENTS.md",
+      "sha256": "38bc61c002961fc4be622b8803e54223da72da64ecb8015ce177ab1524277037"
+    },
+    {
+      "path": "research/AGENTS.md",
+      "sha256": "73529c86f32a7f9cd342d2493019a9c4f6228366dc25b40a3a6f0bdda0728980"
+    }
+  ],
+  "protectedOmoManifest": {
+    "path": ".omo/evidence/tomodachi-work-history-improvement/baseline/protected-omo.sha256",
+    "sha256": "9299dc97660a937d1b99f538f790210736050a49bfdc224ffa44b2bdd3ae3eab",
+    "entries": 445
+  },
+  "mutableOmoPrefixes": [
+    ".omo/evidence/tomodachi-work-history-improvement/",
+    ".omo/ulw-loop/tomodachi-work-history-implementation-20260712/"
+  ],
+  "mutableOmoPaths": [
+    ".omo/boulder.json",
+    ".omo/plans/tomodachi-work-history-improvement.md"
+  ]
+}
