@@ -29,6 +29,7 @@
     "research/opencode-qwen-tool-wrapper-strategy-20260621/README.md",
     "research/opencode-small-model-helper-cli/FRESHNESS.md",
     "research/opencode-small-model-helper-cli/README.md",
+    "scripts/lib/agents-authorization.mjs",
     "scripts/lib/git-status.mjs",
     "scripts/lib/remote-claims-contract.mjs",
     "scripts/lib/validator-runtime.mjs",

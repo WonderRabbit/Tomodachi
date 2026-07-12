@@ -121,11 +121,12 @@ function parseInventory(value) {
       typeof item.path !== "string" ||
       typeof item.sha256 !== "string" ||
       !/^[a-f0-9]{64}$/u.test(item.sha256) ||
+      (item.baselineSha256 !== undefined && (typeof item.baselineSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(item.baselineSha256))) ||
       typeof item.proposal !== "string"
     ) {
       throw new CliError(`protectedGuidance[${index}] is malformed`);
     }
-    return { path: item.path, proposal: item.proposal, sha256: item.sha256 };
+    return { baselineSha256: item.baselineSha256, path: item.path, proposal: item.proposal, sha256: item.sha256 };
   });
   const trackedAreas = assertStringArray(inventory.trackedAreas, "trackedAreas");
   const trackedFiles = assertObject(inventory.trackedFiles, "trackedFiles");
@@ -196,7 +197,7 @@ function assertProposalContract(text, entry) {
   if (!/[가-힣]/u.test(text)) {
     throw new ContractError(`proposal must contain Korean guidance: ${entry.proposal}`);
   }
-  for (const marker of ["0a07266d53b83cd07017ec912c616eecbcc3d693", entry.sha256, "proposal-only"]) {
+  for (const marker of ["0a07266d53b83cd07017ec912c616eecbcc3d693", entry.baselineSha256 ?? entry.sha256, "proposal-only"]) {
     if (!text.includes(marker)) {
       throw new ContractError(`proposal is missing marker ${marker}: ${entry.proposal}`);
     }

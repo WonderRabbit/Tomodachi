@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { lstat, readdir } from "node:fs/promises";
 import path from "node:path";
+import { parseApprovedAgents, verifyApprovedAgents } from "./lib/agents-authorization.mjs";
 import { assertAncestorOfHead, parseStatusFixture, readGitStatus, readHead } from "./lib/git-status.mjs";
 import {
   assertObject,
@@ -222,8 +223,7 @@ await runCli("validate-scope", async () => {
   }
   const head = readHead(options.repo);
   assertAncestorOfHead(options.repo, baseline.head, "baseline head");
-  await verifyHashes(options.repo, baseline.untrackedInputs, "pre-existing input");
-  await verifyHashes(options.repo, baseline.protectedAgents, "protected AGENTS.md");
+  let approvedAgents = new Set();
   if (options.agentsAuthorization !== undefined) {
     const receipt = normalizeRepoPath(options.agentsAuthorization, "agents authorization");
     if (receipt !== agentsAuthorizationPath) {
@@ -231,7 +231,11 @@ await runCli("validate-scope", async () => {
     }
     const contents = await readUtf8(resolveContained(options.repo, receipt, "agents authorization"), "agents authorization");
     if (contents.trim().length === 0) throw new ContractError(`agents authorization is empty: ${receipt}`);
+    approvedAgents = parseApprovedAgents(contents);
+    await verifyApprovedAgents(options.repo, approvedAgents);
   }
+  await verifyHashes(options.repo, baseline.untrackedInputs.filter((record) => !approvedAgents.has(record.path)), "pre-existing input");
+  await verifyHashes(options.repo, baseline.protectedAgents.filter((record) => !approvedAgents.has(record.path)), "protected AGENTS.md");
   if (options.protectedManifest !== undefined) {
     await verifyManifest(options.repo, options.protectedManifest, {
       ...baseline.manifest,

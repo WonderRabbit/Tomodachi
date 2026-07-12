@@ -5,22 +5,26 @@
   "protectedGuidance": [
     {
       "path": "AGENTS.md",
-      "sha256": "e7034d1f574e446b07cedeb1c7209ba3b2354c73f9edd82613fd41a9e2a99293",
+      "sha256": "5d2e0d3cd1bd1ec9467130eeb6b66b6b1de0a0bd5e4c7b0797a117b77c343472",
+      "baselineSha256": "e7034d1f574e446b07cedeb1c7209ba3b2354c73f9edd82613fd41a9e2a99293",
       "proposal": "plan/history/proposals/AGENTS.md"
     },
     {
       "path": "backend/AGENTS.md",
-      "sha256": "13f842e82ae45e6774bafc1f278ccab8c05df8ba1ea93f8ba3cf73c4da11dbd7",
+      "sha256": "c9eca83fec64dfb9b29a86cad6c1be5b3c7368e02bcdf1529420cba568d6b31f",
+      "baselineSha256": "13f842e82ae45e6774bafc1f278ccab8c05df8ba1ea93f8ba3cf73c4da11dbd7",
       "proposal": "plan/history/proposals/backend-AGENTS.md"
     },
     {
       "path": "front/AGENTS.md",
-      "sha256": "38bc61c002961fc4be622b8803e54223da72da64ecb8015ce177ab1524277037",
+      "sha256": "ecdab85716d6973425efdf2c8a6c1385d127bc8bc115df9d3823e81016869f09",
+      "baselineSha256": "38bc61c002961fc4be622b8803e54223da72da64ecb8015ce177ab1524277037",
       "proposal": "plan/history/proposals/front-AGENTS.md"
     },
     {
       "path": "research/AGENTS.md",
-      "sha256": "73529c86f32a7f9cd342d2493019a9c4f6228366dc25b40a3a6f0bdda0728980",
+      "sha256": "754e2f7065efdd764da39218f9d749572d407f1eb3e66bfa82910e8161db848c",
+      "baselineSha256": "73529c86f32a7f9cd342d2493019a9c4f6228366dc25b40a3a6f0bdda0728980",
       "proposal": "plan/history/proposals/research-AGENTS.md"
     }
   ],
@@ -128,6 +132,7 @@
       "scripts/fixtures/scope/path-traversal.txt",
       "scripts/fixtures/scope/prompt-like-inert.txt",
       "scripts/fixtures/ui-plan/missing-api-status.md",
+      "scripts/lib/agents-authorization.mjs",
       "scripts/lib/git-status.mjs",
       "scripts/lib/remote-claims-contract.mjs",
       "scripts/lib/validator-runtime.mjs",

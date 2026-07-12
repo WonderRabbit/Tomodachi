@@ -13,7 +13,7 @@ import {
 
 const COMMAND = "validate-agents-authorization";
 const VALUE_FLAGS = new Set(["--receipt", "--baseline"]);
-const BOOLEAN_FLAGS = new Set(["--expect-no-authorized-writes"]);
+const BOOLEAN_FLAGS = new Set(["--expect-no-authorized-writes", "--expect-authorized-writes"]);
 const HEADER = ["path", "baseline_sha256", "authorization_status", "approver", "proposal_path", "permitted_scope"];
 const PROTECTED_PATHS = ["AGENTS.md", "backend/AGENTS.md", "front/AGENTS.md", "research/AGENTS.md"];
 
@@ -45,10 +45,11 @@ function parseArgs(argv) {
   }
   const receipt = values.get("--receipt");
   const baseline = values.get("--baseline");
-  if (receipt === undefined || baseline === undefined || !booleans.has("--expect-no-authorized-writes")) {
-    throw new CliError("--receipt, --baseline, and --expect-no-authorized-writes are required");
+  const modeFlags = ["--expect-no-authorized-writes", "--expect-authorized-writes"].filter((flag) => booleans.has(flag));
+  if (receipt === undefined || baseline === undefined || modeFlags.length !== 1) {
+    throw new CliError("--receipt, --baseline, and exactly one expectation flag are required");
   }
-  return { baseline, receipt };
+  return { baseline, expectAuthorizedWrites: booleans.has("--expect-authorized-writes"), receipt };
 }
 
 function parseBaseline(value) {
@@ -123,17 +124,32 @@ await runCli(COMMAND, async () => {
     if (row.baseline_sha256 !== expected.sha256) {
       throw new ContractError(`baseline hash mismatch in receipt: ${expected.path}`);
     }
-    if (row.authorization_status !== "pending" || row.approver !== "null") {
-      throw new ContractError(`unauthorized AGENTS write state: ${expected.path}`);
-    }
     const expectedProposal = `plan/history/proposals/${expected.path.replaceAll("/", "-")}`;
     if (row.proposal_path !== expectedProposal || row.permitted_scope.length < 10) {
       throw new ContractError(`proposal scope is invalid: ${expected.path}`);
     }
     const actualHash = await sha256File(resolveContained(repoRoot, expected.path, "protected AGENTS path"));
-    if (actualHash !== expected.sha256) {
-      throw new ContractError(`protected AGENTS content changed without authorization: ${expected.path}`);
+    const actualText = await readUtf8(resolveContained(repoRoot, expected.path, "protected AGENTS path"), "protected AGENTS path");
+    if (args.expectAuthorizedWrites) {
+      if (row.authorization_status !== "approved" || !/^user-\d{4}-\d{2}-\d{2}$/u.test(row.approver)) {
+        throw new ContractError(`approved AGENTS write state is malformed: ${expected.path}`);
+      }
+      if (actualHash === expected.sha256) {
+        throw new ContractError(`approved AGENTS content was not applied: ${expected.path}`);
+      }
+      if (!actualText.includes("적용 승인") || /proposal-only|초안/u.test(actualText)) {
+        throw new ContractError(`approved AGENTS content still looks like a proposal: ${expected.path}`);
+      }
+    } else {
+      if (row.authorization_status !== "pending" || row.approver !== "null") {
+        throw new ContractError(`unauthorized AGENTS write state: ${expected.path}`);
+      }
+      if (actualHash !== expected.sha256) {
+        throw new ContractError(`protected AGENTS content changed without authorization: ${expected.path}`);
+      }
     }
   }
-  return { authorizedWrites: 0, pending: 4, protectedOriginals: 4 };
+  return args.expectAuthorizedWrites
+    ? { approved: 4, authorizedWrites: 4, pending: 0 }
+    : { authorizedWrites: 0, pending: 4, protectedOriginals: 4 };
 });
