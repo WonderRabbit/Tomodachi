@@ -196,7 +196,8 @@ else
 fi
 
 attempt=0
-until docker exec "$container_id" pg_isready --username tomodachi --dbname tomodachi >/dev/null 2>&1; do
+until docker exec "$container_id" psql --username tomodachi --dbname tomodachi \
+  --tuples-only --no-align --command 'SELECT 1' >/dev/null 2>&1; do
   attempt=$((attempt + 1))
   [ "$attempt" -lt 60 ] || fail 'PostgreSQL readiness timed out'
   sleep 1
